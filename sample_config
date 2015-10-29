@@ -1,0 +1,16 @@
+EXPERIMENT_DATA             0p2a_2954test.mca
+SIMULATED_DATA              0p2a_2954testold.mca
+START_SPECTRUM              3
+END_SPECTRUM                3
+START_CHANNEL               2000
+END_CHANNEL                 3000
+ADD_BACKGROUND              yes
+MIN_BACKGROUND_COUNTS       -50
+MAX_BACKGROUND_COUNTS       50
+
+This is a configuration file for the peak comparison code.
+The code will analyze and compare data in the two specifed
+.mca files, in the specified range of spectra and channels.
+If you change the format of the file, prepare for unforseen
+consequences.
+

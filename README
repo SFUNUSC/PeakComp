@@ -1,0 +1,7 @@
+Peak Comparison Tool
+Jonathan Williams
+
+Code for comparing peak shapes across different .mca files.  Useful for analysis of DSAM/RDM data.
+
+Use 'make' to compile.  Requires gcc compiler.
+
