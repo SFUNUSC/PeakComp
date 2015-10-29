@@ -3,7 +3,6 @@
 FILE *config;
 int startSp,endSp,startCh,endCh;
 int addBackground;//0=no,1=constant background
-int minBackground,maxBackground;
 char expDataName[256],simDataName[256];//filenames for the simulated and experiment data
 char str1[256],str2[256];
 
@@ -53,7 +52,7 @@ void readConfigFile(const char * fileName)
           if(strcmp(str2,"yes")==0)
             {
               addBackground=1;
-              printf("Will add a constant background to simulated data.\n");
+              printf("Will add a linear background to simulated data.\n");
             }
           else
             {
@@ -62,15 +61,8 @@ void readConfigFile(const char * fileName)
             }           
 
         }
-      if(strcmp(str1,"MIN_BACKGROUND_COUNTS")==0)
-        minBackground=atoi(str2);
-      if(strcmp(str1,"MAX_BACKGROUND_COUNTS")==0)
-        maxBackground=atoi(str2);
     }
   fclose(config);
-  
-  if(addBackground==1)
-    printf("Background will be varied between %i and %i counts.\n",minBackground,maxBackground);
     
   printf("Finished reading configuration file...\n");
   

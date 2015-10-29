@@ -7,6 +7,7 @@
 
 //forward declarations
 void compareSpectra();
+void computeLinearBackground();
 
 int expHist[NSPECT][S32K],simHist[NSPECT][S32K];
 char str[256];
@@ -18,6 +19,6 @@ int binsSkipped;
 int numBinsUsed;
 int i,j,k;
 //parameters used by background addition algorithm
-int origSimHist[NSPECT][S32K];
-double minchisq;
-int bestBackground, bestBinsSkipped;
+long double m_sum,s_sum,ss_sum,ms_sum,mi_sum,si_sum,i_sum,ii_sum,sum1;//sums for determinants
+long double detA, detAi[3];//determinants for Cramer's rule soln
+double bgA,bgB;//linear background parameters

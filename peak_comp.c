@@ -64,40 +64,43 @@ int main(int argc, char *argv[])
   
   if(addBackground==0)//no background addition
     {
-      compareSpectra();
-    }
-  else if(addBackground==1)//constant background addition
-    {
-      //get the original histogram values
+      //calculate integrals of data in each spectrum and scale the experiment and sim to each other
+      printf("Calculating integrals of data over all spectra and channels...\n");
+      expInt=0.;
+      simInt=0.;
       for (i=startSp;i<=endSp;i++)
         for (j=startCh;j<=endCh;j++)
-          origSimHist[i][j]=simHist[i][j];
+          {
+            expInt+=(double)expHist[i][j];
+            simInt+=(double)simHist[i][j];
+          }
+      scaleFactor=expInt/simInt;
+      printf("Experiment: %1.0f, Simulated: %1.0f\n",expInt,simInt);
+      printf("Scaling simulated data by a factor of: %f\n",scaleFactor);
+      for (i=startSp;i<=endSp;i++)
+        for (j=startCh;j<=endCh;j++)
+          {
+            scaledSimHist[i][j]=scaleFactor*simHist[i][j];
+          }
     
-      minchisq=BIG_NUMBER;
-      for (k=minBackground;k<=maxBackground;k++)
-        {
-          printf("Constant background of %i count(s) added to simulated data...\n",k);
-          //add a count to each channel
-          for (i=startSp;i<=endSp;i++)
-            for (j=startCh;j<=endCh;j++)
-              simHist[i][j]=origSimHist[i][j]+k;
-          //do the chisq analysis
-          compareSpectra();
-          printf("chisq using this background: %f\n\n",chisq);
-          //determine whether this result the best so far
-          if(chisq<minchisq)
-            {
-              minchisq=chisq;
-              bestBackground=k;
-              bestBinsSkipped=binsSkipped;
-            }
-        }
+      compareSpectra();
+    }
+  else if(addBackground==1)//linear background addition
+    {
+    
+      computeLinearBackground();//get background coefficients and scaling factor
       
-      chisq=minchisq;
-      binsSkipped=bestBinsSkipped;
-      printf("\nchisq is minimized for a constant background of %i count(s).\n",bestBackground);
-      printf("Data using this background follows...\n");
+      //scale simulated data
+      for (i=startSp;i<=endSp;i++)
+        for (j=startCh;j<=endCh;j++)
+          scaledSimHist[i][j]=scaleFactor*simHist[i][j];
+      //add background to simulated data
+      for (i=startSp;i<=endSp;i++)
+        for (j=startCh;j<=endCh;j++)
+          scaledSimHist[i][j]=scaledSimHist[i][j] + bgA*j + bgB;
       
+      
+      compareSpectra();
     }
       
   //print output
@@ -117,32 +120,13 @@ void compareSpectra()
   binsSkipped=0;
   numBinsUsed=0;
   
-  //calculate integrals of data in each spectrum and scale the experiment and sim to each other
-  printf("Calculating integrals of data over all spectra and channels...\n");
-  expInt=0.;
-  simInt=0.;
-  for (i=startSp;i<=endSp;i++)
-    for (j=startCh;j<=endCh;j++)
-      {
-        expInt+=(double)expHist[i][j];
-        simInt+=(double)simHist[i][j];
-      }
-  scaleFactor=expInt/simInt;
-  printf("Experiment: %1.0f, Simulated: %1.0f\n",expInt,simInt);
-  printf("Scaling simulated data by a factor of: %f\n",scaleFactor);
-  for (i=startSp;i<=endSp;i++)
-    for (j=startCh;j<=endCh;j++)
-      {
-        scaledSimHist[i][j]=(scaleFactor*simHist[i][j]);
-      }
-  
   //compute chisq for data in the spectra
   chisq=0;
   for (i=startSp;i<=endSp;i++)
     for (j=startCh;j<=endCh;j++)
       {
         if(expHist[i][j]!=0)//avoid dividing by zero
-          chisq+=((scaledSimHist[i][j]-expHist[i][j])*(scaledSimHist[i][j]-expHist[i][j]))/((double)expHist[i][j]);
+          chisq+=((expHist[i][j]-scaledSimHist[i][j])*(expHist[i][j]-scaledSimHist[i][j]))/((double)expHist[i][j]);
         else
           binsSkipped++;
       }
@@ -155,4 +139,49 @@ void compareSpectra()
     }
 
   numBinsUsed = (endCh-startCh+1)*(endSp-startSp+1) - binsSkipped;
+}
+
+//function computes background coefficients and scaling factor
+//using an analytic solution to Cramer's rule minimizing chisq 
+//for the expression:
+//chisq=sum_i[(meas_i - scaleFactor*sim_i - A - B*i)^2 / meas_i]
+void computeLinearBackground()
+{
+
+  //get sums
+  m_sum=0.;
+  s_sum=0.;
+  ss_sum=0.;
+  ms_sum=0.;
+  mi_sum=0.;
+  si_sum=0.;
+  i_sum=0.;
+  ii_sum=0.;
+  sum1=0.;
+  for (i=startSp;i<=endSp;i++)
+    for (j=startCh;j<=endCh;j++)
+      {
+        exp_sum+=expHist[i][j];
+        m_sum+=expHist[i][j]/((double)expHist[i][j]);
+        s_sum+=simHist[i][j]/((double)expHist[i][j]);
+        ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+        ms_sum+=expHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+        mi_sum+=expHist[i][j]*j/((double)expHist[i][j]);
+        si_sum+=simHist[i][j]*j/((double)expHist[i][j]);
+        i_sum+=j/((double)expHist[i][j]);
+        ii_sum+=j*j/((double)expHist[i][j]);
+        sum1+=1.;
+      }
+      
+  //calculate determinants
+  detA=ss_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*i_sum - sum1*si_sum);
+  detAi[0]=ms_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(m_sum*ii_sum - i_sum*mi_sum) + si_sum*(m_sum*i_sum - sum1*mi_sum);
+  detAi[1]=ss_sum*(m_sum*ii_sum - i_sum*mi_sum) - ms_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*mi_sum - m_sum*si_sum);     
+  detAi[2]=ss_sum*(sum1*mi_sum - m_sum*i_sum) - s_sum*(s_sum*mi_sum - m_sum*si_sum) + ms_sum*(s_sum*i_sum - sum1*si_sum);
+  //get parameters (Cramer's rule)
+  scaleFactor=detAi[0]/detA;
+  bgA=detAi[1]/detA;
+  bgB=detAi[2]/detA;
+  printf("Fit linear background of form [A*channel + B], A = %0.3f, B = %0.3f\n",bgA,bgB);
+  printf("Fit scaling factor: %f\n",scaleFactor);
 }
