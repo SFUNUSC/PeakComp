@@ -3,5 +3,6 @@ Jonathan Williams
 
 Code for comparing peak shapes across different .mca files.  Useful for analysis of DSAM/RDM data.
 
-Use 'make' to compile.  Requires gcc compiler.
+Use 'make' to compile.  Requires gcc compiler.  
+Optional data plotting requires gnuplot to be installed (uses the public domain gnuplot_i library by N. Devillard).
 

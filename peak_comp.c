@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
       //add background to simulated data
       for (i=startSp;i<=endSp;i++)
         for (j=startCh;j<=endCh;j++)
-          scaledSimHist[i][j]=scaledSimHist[i][j] + bgA*j + bgB;
+          scaledSimHist[i][j]=scaledSimHist[i][j] + bgA + bgB*j;
       
       
       compareSpectra();
@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
   printf("chisq: %f\n",chisq);
   printf("number of bins: %i\n",numBinsUsed);
   printf("chisq / number of bins: %f\n",chisq/(numBinsUsed));
+  
+  if(plotOutput==1)
+    plotSpectra();
 
   return(0); //great success
 }
@@ -147,7 +150,6 @@ void compareSpectra()
 //chisq=sum_i[(meas_i - scaleFactor*sim_i - A - B*i)^2 / meas_i]
 void computeLinearBackground()
 {
-
   //get sums
   m_sum=0.;
   s_sum=0.;
@@ -160,17 +162,18 @@ void computeLinearBackground()
   sum1=0.;
   for (i=startSp;i<=endSp;i++)
     for (j=startCh;j<=endCh;j++)
-      {
-        m_sum+=expHist[i][j]/((double)expHist[i][j]);
-        s_sum+=simHist[i][j]/((double)expHist[i][j]);
-        ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
-        ms_sum+=expHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
-        mi_sum+=expHist[i][j]*j/((double)expHist[i][j]);
-        si_sum+=simHist[i][j]*j/((double)expHist[i][j]);
-        i_sum+=j/((double)expHist[i][j]);
-        ii_sum+=j*j/((double)expHist[i][j]);
-        sum1+=1.;
-      }
+      if(expHist[i][j]!=0)
+        {
+          m_sum+=expHist[i][j]/((double)expHist[i][j]);
+          s_sum+=simHist[i][j]/((double)expHist[i][j]);
+          ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+          ms_sum+=expHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+          mi_sum+=expHist[i][j]*j/((double)expHist[i][j]);
+          si_sum+=simHist[i][j]*j/((double)expHist[i][j]);
+          i_sum+=j/((double)expHist[i][j]);
+          ii_sum+=j*j/((double)expHist[i][j]);
+          sum1+=1./((double)expHist[i][j]);
+        }
       
   //calculate determinants
   detA=ss_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*i_sum - sum1*si_sum);
@@ -181,6 +184,35 @@ void computeLinearBackground()
   scaleFactor=detAi[0]/detA;
   bgA=detAi[1]/detA;
   bgB=detAi[2]/detA;
-  printf("Fit linear background of form [A*channel + B], A = %0.3f, B = %0.3f\n",bgA,bgB);
+  printf("Fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",bgA,bgB);
   printf("Fit scaling factor: %f\n",scaleFactor);
+}
+
+//function handles plotting of data, using the gnuplot_i library
+void plotSpectra(){
+
+  //generate plot data
+  double x[endSp-startSp+1][endCh-startCh+1];
+  double y1[endSp-startSp+1][endCh-startCh+1];
+  double y2[endSp-startSp+1][endCh-startCh+1];
+  for (i=startSp;i<=endSp;i++)
+    for (j=startCh;j<=endCh;j++)
+      {
+        x[i-startSp][j-startCh]=(double)j;
+        y1[i-startSp][j-startCh]=(double)expHist[i][j];
+        y2[i-startSp][j-startCh]=scaledSimHist[i][j];
+      }
+      
+  handle=gnuplot_init();
+  printf("\n\n");
+  for(i=0;i<endSp-startSp+1;i++)
+    {
+      gnuplot_plot_xy(handle, x[i], y1[i], endCh-startCh+1, "Experiment");
+      gnuplot_plot_xy(handle, x[i], y2[i], endCh-startCh+1, "Simulation");
+      printf("Showing plot for spectrum %i, press any key to continue...", startSp+i);
+      getc(stdin);
+      gnuplot_resetplot(handle);
+    }
+  gnuplot_close(handle);
+  
 }

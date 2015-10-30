@@ -1,5 +1,7 @@
 peak_comp
 list
+*tmpdatafile*
+*.o
 *.mca
 *.spe
 *.root

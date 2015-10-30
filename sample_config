@@ -1,10 +1,11 @@
-EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
+EXPERIMENT_DATA             0p2a_2954test.mca
 SIMULATED_DATA              0p2a_2954testold.mca
 START_SPECTRUM              3
 END_SPECTRUM                6
 START_CHANNEL               2000
 END_CHANNEL                 3000
 ADD_BACKGROUND              yes
+PLOT_OUTPUT                 yes
 
 This is a configuration file for the peak comparison code.
 The code will analyze and compare data in the two specifed
