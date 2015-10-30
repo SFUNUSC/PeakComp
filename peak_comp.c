@@ -161,7 +161,6 @@ void computeLinearBackground()
   for (i=startSp;i<=endSp;i++)
     for (j=startCh;j<=endCh;j++)
       {
-        exp_sum+=expHist[i][j];
         m_sum+=expHist[i][j]/((double)expHist[i][j]);
         s_sum+=simHist[i][j]/((double)expHist[i][j]);
         ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
