@@ -16,14 +16,14 @@ int expHist[NSPECT][S32K],simHist[NSPECT][S32K];
 char str[256];
 double chisq;
 double expInt, simInt;//integral of the simulated and experimental data over the specified channel range
-double scaleFactor;//factor to scale data by
+double scaleFactor[NSPECT];//factor to scale a given simulated sprectrum by
 double scaledSimHist[NSPECT][S32K];
 int binsSkipped;
 int numBinsUsed;
 int i,j;
 //parameters used by background addition algorithm
 long double m_sum,s_sum,ss_sum,ms_sum,mi_sum,si_sum,i_sum,ii_sum,sum1;//sums for determinants
-long double detA, detAi[3];//determinants for Cramer's rule soln
-long double bgA,bgB;//linear background parameters
+long double detA[NSPECT], detAi[NSPECT][3];//determinants for Cramer's rule soln
+long double bgA[NSPECT],bgB[NSPECT];//linear background parameters
 //gnuplot interface
 gnuplot_ctrl *handle ;

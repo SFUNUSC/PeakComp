@@ -49,10 +49,8 @@ void readConfigFile(const char * fileName)
   
   printf("Experiment data filename is %s.\n",expDataName);
   printf("Simulated data filename is %s.\n",simDataName);
-  printf("Comparison starts at spectrum %i.\n",startSp);
-  printf("Comparison ends at spectrum %i.\n",endSp);
-  printf("Comparison starts at channel %i.\n",startCh);
-  printf("Comparison ends at channel %i.\n",endCh);
+  printf("Comparison uses spectra %i through %i.\n",startSp,endSp);
+  printf("Comparison uses channels %i through %i.\n",startCh,endCh);
   if(addBackground==0)
     printf("Will not add background to simulated data.\n");
   if(addBackground==1)

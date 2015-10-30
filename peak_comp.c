@@ -65,22 +65,27 @@ int main(int argc, char *argv[])
   if(addBackground==0)//no background addition
     {
       //calculate integrals of data in each spectrum and scale the experiment and sim to each other
-      printf("Calculating integrals of data over all spectra and channels...\n");
-      expInt=0.;
-      simInt=0.;
+      
+      for (i=startSp;i<=endSp;i++)
+        {
+          printf("Calculating integrals of data in spectrum %i...\n",i);
+          expInt=0.;
+          simInt=0.;
+          for (j=startCh;j<=endCh;j++)
+            {
+              expInt+=(double)expHist[i][j];
+              simInt+=(double)simHist[i][j];
+            }
+          scaleFactor[i]=expInt/simInt;
+          printf("Experiment: %1.0f, Simulated: %1.0f\n",expInt,simInt);
+          printf("Scaling simulated data by a factor of: %f\n",scaleFactor[i]);
+        }
+      
+      
       for (i=startSp;i<=endSp;i++)
         for (j=startCh;j<=endCh;j++)
           {
-            expInt+=(double)expHist[i][j];
-            simInt+=(double)simHist[i][j];
-          }
-      scaleFactor=expInt/simInt;
-      printf("Experiment: %1.0f, Simulated: %1.0f\n",expInt,simInt);
-      printf("Scaling simulated data by a factor of: %f\n",scaleFactor);
-      for (i=startSp;i<=endSp;i++)
-        for (j=startCh;j<=endCh;j++)
-          {
-            scaledSimHist[i][j]=scaleFactor*simHist[i][j];
+            scaledSimHist[i][j]=scaleFactor[i]*simHist[i][j];
           }
     
       compareSpectra();
@@ -93,11 +98,11 @@ int main(int argc, char *argv[])
       //scale simulated data
       for (i=startSp;i<=endSp;i++)
         for (j=startCh;j<=endCh;j++)
-          scaledSimHist[i][j]=scaleFactor*simHist[i][j];
+          scaledSimHist[i][j]=scaleFactor[i]*simHist[i][j];
       //add background to simulated data
       for (i=startSp;i<=endSp;i++)
         for (j=startCh;j<=endCh;j++)
-          scaledSimHist[i][j]=scaledSimHist[i][j] + bgA + bgB*j;
+          scaledSimHist[i][j]=scaledSimHist[i][j] + bgA[i] + bgB[i]*j;
       
       
       compareSpectra();
@@ -151,41 +156,48 @@ void compareSpectra()
 void computeLinearBackground()
 {
   //get sums
-  m_sum=0.;
-  s_sum=0.;
-  ss_sum=0.;
-  ms_sum=0.;
-  mi_sum=0.;
-  si_sum=0.;
-  i_sum=0.;
-  ii_sum=0.;
-  sum1=0.;
+  
   for (i=startSp;i<=endSp;i++)
-    for (j=startCh;j<=endCh;j++)
-      if(expHist[i][j]!=0)
-        {
-          m_sum+=expHist[i][j]/((double)expHist[i][j]);
-          s_sum+=simHist[i][j]/((double)expHist[i][j]);
-          ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
-          ms_sum+=expHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
-          mi_sum+=expHist[i][j]*j/((double)expHist[i][j]);
-          si_sum+=simHist[i][j]*j/((double)expHist[i][j]);
-          i_sum+=j/((double)expHist[i][j]);
-          ii_sum+=j*j/((double)expHist[i][j]);
-          sum1+=1./((double)expHist[i][j]);
-        }
-      
-  //calculate determinants
-  detA=ss_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*i_sum - sum1*si_sum);
-  detAi[0]=ms_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(m_sum*ii_sum - i_sum*mi_sum) + si_sum*(m_sum*i_sum - sum1*mi_sum);
-  detAi[1]=ss_sum*(m_sum*ii_sum - i_sum*mi_sum) - ms_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*mi_sum - m_sum*si_sum);     
-  detAi[2]=ss_sum*(sum1*mi_sum - m_sum*i_sum) - s_sum*(s_sum*mi_sum - m_sum*si_sum) + ms_sum*(s_sum*i_sum - sum1*si_sum);
-  //get parameters (Cramer's rule)
-  scaleFactor=detAi[0]/detA;
-  bgA=detAi[1]/detA;
-  bgB=detAi[2]/detA;
-  printf("Fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",bgA,bgB);
-  printf("Fit scaling factor: %f\n",scaleFactor);
+    {
+      m_sum=0.;
+      s_sum=0.;
+      ss_sum=0.;
+      ms_sum=0.;
+      mi_sum=0.;
+      si_sum=0.;
+      i_sum=0.;
+      ii_sum=0.;
+      sum1=0.;
+      for (j=startCh;j<=endCh;j++)
+        if(expHist[i][j]!=0)
+          {
+            m_sum+=expHist[i][j]/((double)expHist[i][j]);
+            s_sum+=simHist[i][j]/((double)expHist[i][j]);
+            ss_sum+=simHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+            ms_sum+=expHist[i][j]*simHist[i][j]/((double)expHist[i][j]);
+            mi_sum+=expHist[i][j]*j/((double)expHist[i][j]);
+            si_sum+=simHist[i][j]*j/((double)expHist[i][j]);
+            i_sum+=j/((double)expHist[i][j]);
+            ii_sum+=j*j/((double)expHist[i][j]);
+            sum1+=1./((double)expHist[i][j]);
+          }
+       
+      //calculate determinants
+      detA[i]=ss_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*i_sum - sum1*si_sum);
+      detAi[i][0]=ms_sum*(sum1*ii_sum - i_sum*i_sum) - s_sum*(m_sum*ii_sum - i_sum*mi_sum) + si_sum*(m_sum*i_sum - sum1*mi_sum);
+      detAi[i][1]=ss_sum*(m_sum*ii_sum - i_sum*mi_sum) - ms_sum*(s_sum*ii_sum - i_sum*si_sum) + si_sum*(s_sum*mi_sum - m_sum*si_sum);     
+      detAi[i][2]=ss_sum*(sum1*mi_sum - m_sum*i_sum) - s_sum*(s_sum*mi_sum - m_sum*si_sum) + ms_sum*(s_sum*i_sum - sum1*si_sum);
+      //get parameters (Cramer's rule)
+      scaleFactor[i]=detAi[i][0]/detA[i];
+      bgA[i]=detAi[i][1]/detA[i];
+      bgB[i]=detAi[i][2]/detA[i];
+      printf("Spectrum %i: fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",i,bgA[i],bgB[i]);
+      printf("Fit scaling factor: %f\n",scaleFactor[i]);   
+          
+       
+     }
+     
+  
 }
 
 //function handles plotting of data, using the gnuplot_i library
