@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     }
       
   //print output
-  printf("\nCOMPARISON DATA\n---------------\n");
+  printf("\nCOMPARISON DATA (SUMMED OVER ALL SPECTRA)\n-----------------------------------------\n");
   printf("chisq: %f\n",chisq);
   printf("number of bins: %i\n",numBinsUsed);
   printf("chisq / number of bins: %f\n",chisq/(numBinsUsed));
@@ -155,8 +155,8 @@ void compareSpectra()
 //chisq=sum_i[(meas_i - scaleFactor*sim_i - A - B*i)^2 / meas_i]
 void computeLinearBackground()
 {
-  //get sums
-  
+  printf("\n");  
+  //get sums  
   for (i=startSp;i<=endSp;i++)
     {
       m_sum=0.;
@@ -216,12 +216,15 @@ void plotSpectra(){
       }
       
   handle=gnuplot_init();
-  printf("\n\n");
+  printf("\n");
   for(i=0;i<endSp-startSp+1;i++)
     {
+      gnuplot_setstyle(handle,"steps");
+      gnuplot_cmd(handle,"set xlabel 'Channel'");
+      gnuplot_cmd(handle,"set ylabel 'Counts'");
       gnuplot_plot_xy(handle, x[i], y1[i], endCh-startCh+1, "Experiment");
       gnuplot_plot_xy(handle, x[i], y2[i], endCh-startCh+1, "Simulation");
-      printf("Showing plot for spectrum %i, press any key to continue...", startSp+i);
+      printf("Showing plot for spectrum %i, press [ENTER] to continue...", startSp+i);
       getc(stdin);
       gnuplot_resetplot(handle);
     }
