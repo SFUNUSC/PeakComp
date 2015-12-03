@@ -15,6 +15,7 @@ void plotSpectra();
 int expHist[NSPECT][S32K],simHist[NSPECT][S32K];
 char str[256];
 double chisq;
+double spectChisq[NSPECT];
 double expInt, simInt;//integral of the simulated and experimental data over the specified channel range
 double scaleFactor[NSPECT];//factor to scale a given simulated sprectrum by
 double scaledSimHist[NSPECT][S32K];

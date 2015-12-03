@@ -1,13 +1,15 @@
 EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
 SIMULATED_DATA              0p2a_2954test.mca
-START_SPECTRUM              3
-END_SPECTRUM                6
-START_CHANNEL               5600
-END_CHANNEL                 6100
 ADD_BACKGROUND              yes
 PLOT_OUTPUT                 yes
 
-This is a configuration file for the peak comparison code.
+SPECTRUM  START_CHANNEL END_CHANNEL
+3         5600          6100
+4         5600          6100
+5         5600          6100
+6         5600          6100
+
+This is a parameter file for the peak comparison code.
 The code will analyze and compare data in the two specifed
 .mca files, in the specified range of spectra and channels.
 If you change the format of the file, prepare for unforseen
