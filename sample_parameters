@@ -1,13 +1,18 @@
 EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
-SIMULATED_DATA              0p2a_2954test.mca
 ADD_BACKGROUND              yes
 PLOT_OUTPUT                 yes
 
+SIMULATED_DATA
+test.mca
+test2.mca
+
 SPECTRUM  START_CHANNEL END_CHANNEL
-3         5600          6100
+3         5500          6000
 4         5600          6100
-5         5600          6100
-6         5600          6100
+5         5700          6200
+6         5800          6300
+
+<---END_OF_PARAMETERS--->
 
 This is a parameter file for the peak comparison code.
 The code will analyze and compare data in the two specifed

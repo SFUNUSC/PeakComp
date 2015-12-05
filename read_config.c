@@ -2,10 +2,10 @@
 #include <string.h>
 
 FILE *config;
-int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh;
+int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData;
 int addBackground;//0=no,1=constant background
 int plotOutput;//0=no,1=yes
-char expDataName[256],simDataName[256];//filenames for the simulated and experiment data
+char expDataName[256],simDataName[NSIMDATA][256];//filenames for the simulated and experiment data
 char str[256],str1[256],str2[256];
 
 void readConfigFile(const char * fileName) 
@@ -15,6 +15,7 @@ void readConfigFile(const char * fileName)
   numSpectra=0;
   endSpectrum=0;
   maxNumCh=0;
+  numSimData=0;
   if((config=fopen(fileName,"r"))==NULL)
     {
       printf("ERROR: Cannot open the config file %s!\n",fileName);
@@ -24,6 +25,7 @@ void readConfigFile(const char * fileName)
     {
       if(fgets(str,256,config)!=NULL)
         {
+          
           if(index<NSPECT)
             if(sscanf(str,"%i %i %i",&spectrum[index],&startCh[index],&endCh[index])==3) //specturm and channel data
               {
@@ -38,8 +40,6 @@ void readConfigFile(const char * fileName)
             {
               if(strcmp(str1,"EXPERIMENT_DATA")==0)
                 strcpy(expDataName,str2);
-              if(strcmp(str1,"SIMULATED_DATA")==0)
-                strcpy(simDataName,str2);
               if(strcmp(str1,"ADD_BACKGROUND")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -55,12 +55,24 @@ void readConfigFile(const char * fileName)
                     plotOutput=0;
                 }
             }
+          if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
+            {
+              if(strcmp(str1,"<---END_OF_PARAMETERS--->")==0)
+                break;
+              else if(strcmp(str1,"SIMULATED_DATA")!=0)
+                if(numSimData<NSIMDATA)
+                  {
+                    strcpy(simDataName[numSimData],str1);
+                    numSimData++;
+                  }
+            }
         }
     }
   fclose(config);
   
-  printf("Experiment data filename is %s.\n",expDataName);
-  printf("Simulated data filename is %s.\n",simDataName);
+  printf("Taking experiment data from file: %s\n",expDataName);
+  for(index=0;index<numSimData;index++)
+    printf("Taking simulated data from file (%i of %i): %s\n",index+1,numSimData,simDataName[index]);
   for(index=0;index<numSpectra;index++)
     printf("Will compare spectrum %i from channels %i to %i.\n",spectrum[index],startCh[index],endCh[index]);
   if(addBackground==0)
