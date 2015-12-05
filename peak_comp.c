@@ -16,13 +16,14 @@ int main(int argc, char *argv[])
   
   //initialize values
   addBackground=0;
-  for (i=0;i<NSPECT;i++)
-    for (j=0;j<S32K;j++)
-      {
-        expHist[i][j]=0;
-        simHist[0][i][j]=0;
-        scaledSimHist[0][i][j]=0.;
-      }
+  for (i=0;i<NSIMDATA;i++)
+    for (j=0;j<NSPECT;j++)
+      for (k=0;k<S32K;k++)
+        {
+          expHist[j][k]=0;
+          simHist[i][j][k]=0;
+          scaledSimHist[i][j][k]=0.;
+        }
 
   readConfigFile(argv[1]); //grab data from the config file
 
@@ -136,7 +137,7 @@ void compareSpectra()
 {
 
   //initialize values
-  binsSkipped=0;
+  int binsSkipped=0;
   numBinsUsed=0;
   double sumSimValue=0;
   
@@ -179,6 +180,7 @@ void compareSpectra()
 void computeLinearBackground(int numSimData)
 {
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,si_sum[NSIMDATA],i_sum,ii_sum,sum1; //sums needed to construct system of equations
+  lin_eq_type linEq;
   printf("\n");  
   
   for (i=0;i<numSpectra;i++)
@@ -285,7 +287,8 @@ void plotSpectra()
             ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j];
           }
       }
-      
+
+  gnuplot_ctrl *handle;    
   handle=gnuplot_init();
   printf("\n");
   for(i=0;i<numSpectra;i++)
