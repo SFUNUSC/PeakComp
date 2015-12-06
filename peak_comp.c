@@ -302,7 +302,8 @@ void plotSpectra()
           sprintf(str,"Simulation (%s)",simDataName[j]);
           gnuplot_plot_xy(handle, x[i], ysim[j][i], endCh[i]-startCh[i]+1, str);
         }
-      gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation (sum)");
+      if(numSimData>1)
+        gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation (sum)");
       printf("Showing plot for spectrum %i, press [ENTER] to continue...", spectrum[i]);
       getc(stdin);
       gnuplot_resetplot(handle);
