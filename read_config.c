@@ -4,7 +4,7 @@
 FILE *config;
 int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData;
 int addBackground;//0=no,1=constant background
-int plotOutput;//0=no,1=yes
+int plotOutput;//0=no,1=yes,2=detailed
 char expDataName[256],simDataName[NSIMDATA][256];//filenames for the simulated and experiment data
 char str[256],str1[256],str2[256];
 
@@ -51,6 +51,8 @@ void readConfigFile(const char * fileName)
                 {
                   if(strcmp(str2,"yes")==0)
                     plotOutput=1;
+                  else if(strcmp(str2,"detailed")==0)
+                    plotOutput=2;
                   else
                     plotOutput=0;
                 }
@@ -83,6 +85,8 @@ void readConfigFile(const char * fileName)
     printf("Will not plot output data.\n");
   if(plotOutput==1)
     printf("Will plot output data.\n");
+  if(plotOutput==2)
+    printf("Will plot detailed output data.\n");
   
   printf("Finished reading parameter file...\n");
   

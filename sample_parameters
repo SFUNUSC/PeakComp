@@ -14,9 +14,24 @@ SPECTRUM  START_CHANNEL END_CHANNEL
 
 <---END_OF_PARAMETERS--->
 
-This is a parameter file for the peak comparison code.
-The code will analyze and compare data in the two specifed
-.mca files, in the specified range of spectra and channels.
-If you change the format of the file, prepare for unforseen
-consequences.
+This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
 
+Parameters and their descriptions follow:
+
+EXPERIMENT_DATA
+Contains the path to the .mca file containing experiment data.
+
+ADD_BACKGROUND
+no: Don't add any background.
+yes: Add a linear background to the simulated data.
+
+PLOT_OUTPUT
+no: Show chisq stats only.
+yes: Show a plot of the simulated and experimental data alongside chisq stats.
+detailed: Same as 'yes', except plot all simulated datasets and background as well.
+
+SIMULATED_DATA
+Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.
+
+SPECTRUM  START_CHANNEL END_CHANNEL
+Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.

@@ -5,8 +5,11 @@ Jonathan Williams
 A code for comparing peak shapes across simulated and experimental data in .mca files.  Useful for analysis of DSAM/RDM data.
 
 If background addition is enabled in the parameter file, a linear scaling factor and a linear background of form [A + B*channel] will be added to the simulated data, with parameters chosen by analytically minimizing the weighted chisq goodness of fit statistic between experiment and simulation.  Multiple simulated datasets may be specified, and in this case the chisq of the sum of the datasets after scaling them individually will be minimized.
+
 If background addition is disabled, each simulated dataset will be scaled such that he integral of simulated and experimental data over the chosen channel range is the same.
 If multiple spectra are specified, the scaling and/or background addition is done on a spectrum-by-spectrum basis.
+
+For a detailed example and description of how to specify parameters, see the 'sample_parameters' file.
 
 
 Installation/Dependencies:

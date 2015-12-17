@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
   printf("number of bins: %i\n",numBinsUsed);
   printf("chisq (total) / number of bins: %f\n",chisq/(numBinsUsed));
   
-  if(plotOutput==1)
+  if(plotOutput>=1)
     plotSpectra();
 
   return 0; //great success
@@ -273,6 +273,7 @@ void plotSpectra()
   double x[numSpectra][maxNumCh];
   double yexp[numSpectra][maxNumCh];
   double ysim[NSIMDATA][numSpectra][maxNumCh];
+  double ybackground[numSpectra][maxNumCh];
   double ysimsum[numSpectra][maxNumCh];
   
   for (i=0;i<numSpectra;i++)
@@ -280,10 +281,12 @@ void plotSpectra()
       {
         x[i][j-startCh[i]]=(double)j;
         yexp[i][j-startCh[i]]=(double)expHist[spectrum[i]][j];
+        if(addBackground==1)
+          ybackground[i][j-startCh[i]]=bgA[spectrum[i]] + bgB[spectrum[i]]*j;
         ysimsum[i][j-startCh[i]]=0.;
         for (k=0;k<numSimData;k++)
           {
-            ysim[k][i][j-startCh[i]]=scaledSimHist[k][spectrum[i]][j];
+            ysim[k][i][j-startCh[i]]=scaledSimHist[k][spectrum[i]][j] - ybackground[i][j-startCh[i]];
             ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j];
           }
       }
@@ -297,13 +300,24 @@ void plotSpectra()
       gnuplot_cmd(handle,"set xlabel 'Channel'");
       gnuplot_cmd(handle,"set ylabel 'Counts'");
       gnuplot_plot_xy(handle, x[i], yexp[i], endCh[i]-startCh[i]+1, "Experiment");
-      for (j=0;j<numSimData;j++)
+      if(plotOutput>1)//detailed plot
         {
-          sprintf(str,"Simulation (%s)",simDataName[j]);
-          gnuplot_plot_xy(handle, x[i], ysim[j][i], endCh[i]-startCh[i]+1, str);
+          if(addBackground==1)//plot background
+            {
+              gnuplot_setstyle(handle,"lines"); //plot background as a line
+              gnuplot_plot_xy(handle, x[i], ybackground[i], endCh[i]-startCh[i]+1, "Background");
+              gnuplot_setstyle(handle,"steps"); //set the plot style back
+            }
+          for (j=0;j<numSimData;j++)//plot individual sim data
+            {
+              sprintf(str,"Simulation (%s)",simDataName[j]);
+              gnuplot_plot_xy(handle, x[i], ysim[j][i], endCh[i]-startCh[i]+1, str);
+            }
+          if((numSimData>1)||(addBackground==1))//plot sum
+            gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");
         }
-      if(numSimData>1)
-        gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation (sum)");
+      else //simple plot
+        gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");
       printf("Showing plot for spectrum %i, press [ENTER] to continue...", spectrum[i]);
       getc(stdin);
       gnuplot_resetplot(handle);
