@@ -65,58 +65,22 @@ int main(int argc, char *argv[])
   for (i=0;i<numSimData;i++) 
     fclose(simData[i]);
   printf("Spectra read in...\n");
-  
-  if(addBackground==0)//no background addition
-    {
-      //calculate integrals of data in each spectrum and scale the experiment and sim to each other
+
+  computeBackgroundandScaling(numSimData,addBackground);//get background coefficients and scaling factors
       
-      for (i=0;i<numSimData;i++)
-        {
-          printf("Comparing experiment data to simulated data from file: %s\n",simDataName[i]);
-          for (j=0;j<numSpectra;j++)
-            {
-              printf("Calculating integrals of data in spectrum %i...\n",spectrum[j]);
-              expInt=0.;
-              simInt[i]=0.;
-            
-              for (k=startCh[j];k<=endCh[j];k++)
-                {
-                  expInt+=(double)expHist[spectrum[j]][k];
-                  simInt[i]+=(double)simHist[i][spectrum[j]][k];
-                }
-              scaleFactor[i][spectrum[j]]=expInt/simInt[i];
-              printf("Experiment: %1.0f, Simulated: %1.0f\n",expInt,simInt[i]);
-              printf("Scaling simulated data from file by a factor of: %f\n",scaleFactor[i][spectrum[j]]);
-            }
-        }
-        
-      for (i=0;i<numSimData;i++)  
-        for (j=0;j<numSpectra;j++)
-          for (k=startCh[j];k<=endCh[j];k++)
-            {
-              scaledSimHist[i][spectrum[j]][k]=scaleFactor[i][spectrum[j]]*simHist[i][spectrum[j]][k];
-            }
-    
-      compareSpectra();
-    }
-  else if(addBackground==1)//linear background addition
-    {
-    
-      computeLinearBackground(numSimData);//get background coefficients and scaling factor
+  //scale simulated data
+  for (i=0;i<numSimData;i++)
+    for (j=0;j<numSpectra;j++)
+      for (k=startCh[j];k<=endCh[j];k++)
+        scaledSimHist[i][spectrum[j]][k]=scaleFactor[i][spectrum[j]]*simHist[i][spectrum[j]][k];
+  //add background to simulated data
+  if(addBackground==1)
+    for (i=0;i<numSimData;i++)
+      for (j=0;j<numSpectra;j++)
+        for (k=startCh[j];k<=endCh[j];k++)
+          scaledSimHist[i][spectrum[j]][k]=scaledSimHist[i][spectrum[j]][k] + bgA[spectrum[j]] + bgB[spectrum[j]]*k;
       
-      //scale simulated data
-      for (i=0;i<numSimData;i++)
-        for (j=0;j<numSpectra;j++)
-          for (k=startCh[j];k<=endCh[j];k++)
-            scaledSimHist[i][spectrum[j]][k]=scaleFactor[i][spectrum[j]]*simHist[i][spectrum[j]][k];
-      //add background to simulated data
-      for (i=0;i<numSimData;i++)
-        for (j=0;j<numSpectra;j++)
-          for (k=startCh[j];k<=endCh[j];k++)
-            scaledSimHist[i][spectrum[j]][k]=scaledSimHist[i][spectrum[j]][k] + bgA[spectrum[j]] + bgB[spectrum[j]]*k;
-      
-      compareSpectra();
-    }
+  compareSpectra();
       
   //print output
   printf("\nCOMPARISON DATA\n---------------\n");
@@ -177,7 +141,8 @@ void compareSpectra()
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
 //chisq=sum_i[(meas_i - A - B*i - scaleFactor_1*sim_1i - scaleFactor_2*sim_2i - ...)^2 / meas_i]
-void computeLinearBackground(int numSimData)
+//addBG=0: no background addition
+void computeBackgroundandScaling(int numSimData, int addBG)
 {
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,si_sum[NSIMDATA],i_sum,ii_sum,sum1; //sums needed to construct system of equations
   lin_eq_type linEq;
@@ -220,29 +185,41 @@ void computeLinearBackground(int numSimData)
           }
       
       //construct system of equations (matrix/vector entries)
-      linEq.dim=numSimData+2;
-      for (j=0;j<numSimData;j++)
+      
+      if(addBG==0)
         {
-          linEq.matrix[j][j]=ss_sum[j][j];
-          if((j+1)<numSimData)
-            {
-              linEq.matrix[j][j+1]=ss_sum[j][j+1];
-              linEq.matrix[j+1][j]=ss_sum[j+1][j];
-            }
-          linEq.matrix[linEq.dim-2][j]=s_sum[j];
-          linEq.matrix[linEq.dim-1][j]=si_sum[j];
-          linEq.matrix[j][linEq.dim-2]=s_sum[j];
-          linEq.matrix[j][linEq.dim-1]=si_sum[j];
-          //printf("%i of %i\n",j,linEq.dim-1);
+          linEq.dim=numSimData;
+          for (j=0;j<numSimData;j++)
+            for (k=0;k<numSimData;k++)
+              linEq.matrix[j][k]=ss_sum[j][k];
         }
-      linEq.matrix[linEq.dim-2][linEq.dim-2]=sum1;
-      linEq.matrix[linEq.dim-2][linEq.dim-1]=i_sum;
-      linEq.matrix[linEq.dim-1][linEq.dim-2]=i_sum;
-      linEq.matrix[linEq.dim-1][linEq.dim-1]=ii_sum;
+      else
+        {
+          linEq.dim=numSimData+2;
+          for (j=0;j<numSimData;j++)
+            {
+              linEq.matrix[j][j]=ss_sum[j][j];
+              if((j+1)<numSimData)
+                {
+                  linEq.matrix[j][j+1]=ss_sum[j][j+1];
+                  linEq.matrix[j+1][j]=ss_sum[j+1][j];
+                }
+              linEq.matrix[linEq.dim-2][j]=s_sum[j];
+              linEq.matrix[linEq.dim-1][j]=si_sum[j];
+              linEq.matrix[j][linEq.dim-2]=s_sum[j];
+              linEq.matrix[j][linEq.dim-1]=si_sum[j];
+              //printf("%i of %i\n",j,linEq.dim-1);
+            }
+          linEq.matrix[linEq.dim-2][linEq.dim-2]=sum1;
+          linEq.matrix[linEq.dim-2][linEq.dim-1]=i_sum;
+          linEq.matrix[linEq.dim-1][linEq.dim-2]=i_sum;
+          linEq.matrix[linEq.dim-1][linEq.dim-1]=ii_sum;
+          linEq.vector[linEq.dim-2]=m_sum;
+          linEq.vector[linEq.dim-1]=mi_sum;
+        }
       for (j=0;j<numSimData;j++)
         linEq.vector[j]=ms_sum[j];
-      linEq.vector[linEq.dim-2]=m_sum;
-      linEq.vector[linEq.dim-1]=mi_sum;
+      
       
       //solve system of equations and assign values
       if(!(solve_lin_eq(&linEq)==1))
@@ -252,14 +229,23 @@ void computeLinearBackground(int numSimData)
         }
       for (j=0;j<numSimData;j++)  
         scaleFactor[j][spectrum[i]]=linEq.solution[j];
-      bgA[spectrum[i]]=linEq.solution[linEq.dim-2];
-      bgB[spectrum[i]]=linEq.solution[linEq.dim-1];
-      
-      printf("Spectrum %i: fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",spectrum[i],bgA[spectrum[i]],bgB[spectrum[i]]);
-      for (j=0;j<numSimData;j++)
-        printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
-          
-       
+      if(addBG==0)
+        {
+          bgA[spectrum[i]]=0.;
+          bgB[spectrum[i]]=0.;
+          printf("Spectrum %i - ",spectrum[i]);
+          for (j=0;j<numSimData;j++)
+            printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
+        }
+      else
+        {
+          bgA[spectrum[i]]=linEq.solution[linEq.dim-2];
+          bgB[spectrum[i]]=linEq.solution[linEq.dim-1];
+          printf("Spectrum %i: fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",spectrum[i],bgA[spectrum[i]],bgB[spectrum[i]]);
+          for (j=0;j<numSimData;j++)
+            printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
+        }
+
     }
      
   

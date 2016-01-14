@@ -10,7 +10,7 @@
 
 //forward declarations
 void compareSpectra();
-void computeLinearBackground(int);
+void computeBackgroundandScaling(int,int);
 void plotSpectra();
 
 //global variables (umad compsci profs?)
