@@ -16,14 +16,9 @@ int main(int argc, char *argv[])
   
   //initialize values
   addBackground=0;
-  for (i=0;i<NSIMDATA;i++)
-    for (j=0;j<NSPECT;j++)
-      for (k=0;k<S32K;k++)
-        {
-          expHist[j][k]=0;
-          simHist[i][j][k]=0;
-          scaledSimHist[i][j][k]=0.;
-        }
+  memset(expHist,0,sizeof(expHist));
+  memset(simHist,0,sizeof(simHist));
+  memset(scaledSimHist,0,sizeof(scaledSimHist));
 
   readConfigFile(argv[1]); //grab data from the config file
 
@@ -96,6 +91,7 @@ int main(int argc, char *argv[])
   return 0; //great success
 }
 
+
 //function compares spectra and gets chisq and other stats
 void compareSpectra()
 {
@@ -130,13 +126,14 @@ void compareSpectra()
   //print warnings
   if(binsSkipped>0)
     {
-      printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
+      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
       printf("Bins skipped: %i.\n",binsSkipped);
     }
   for (i=0;i<numSpectra;i++)
     numBinsUsed += (endCh[i]-startCh[i]+1);
   numBinsUsed -= binsSkipped;
 }
+
 
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
@@ -184,8 +181,7 @@ void computeBackgroundandScaling(int numSimData, int addBG)
               }
           }
       
-      //construct system of equations (matrix/vector entries)
-      
+      //construct system of equations (matrix/vector entries) 
       if(addBG==0)
         {
           linEq.dim=numSimData;
@@ -247,9 +243,9 @@ void computeBackgroundandScaling(int numSimData, int addBG)
         }
 
     }
-     
   
 }
+
 
 //function handles plotting of data, using the gnuplot_i library
 void plotSpectra()
@@ -304,7 +300,10 @@ void plotSpectra()
         }
       else //simple plot
         gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");
-      printf("Showing plot for spectrum %i, press [ENTER] to continue...", spectrum[i]);
+      if(i!=numSpectra-1)//check whether we're showing the last plot
+        printf("Showing plot for spectrum %i, press [ENTER] to continue...", spectrum[i]);
+      else
+        printf("Showing plot for spectrum %i, press [ENTER] to exit.", spectrum[i]);
       getc(stdin);
       gnuplot_resetplot(handle);
     }
