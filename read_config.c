@@ -27,7 +27,7 @@ void readConfigFile(const char * fileName)
         {
           
           if(index<NSPECT)
-            if(sscanf(str,"%i %i %i",&spectrum[index],&startCh[index],&endCh[index])==3) //specturm and channel data
+            if(sscanf(str,"%i %i %i",&spectrum[index],&startCh[index],&endCh[index])==3) //spectrum and channel data
               {
                 if(spectrum[index]>endSpectrum)
                   endSpectrum=spectrum[index];

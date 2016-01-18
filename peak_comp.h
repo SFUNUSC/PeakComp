@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -6,12 +7,13 @@
 
 #define S32K        32768
 #define NSPECT      100
-#define NSIMDATA    8
+#define NSIMDATA    MAX_DIM-2 //2 parameters reserved for background fitting
 
 //forward declarations
 void compareSpectra();
 void computeBackgroundandScaling(int,int);
 void plotSpectra();
+void sigint_cleanup();
 
 //global variables (umad compsci profs?)
 int expHist[NSPECT][S32K],simHist[NSIMDATA][NSPECT][S32K];
@@ -24,3 +26,5 @@ double scaledSimHist[NSIMDATA][NSPECT][S32K];
 int numBinsUsed;
 int i,j,k,l;
 long double bgA[NSPECT],bgB[NSPECT];//linear background parameters
+gnuplot_ctrl *handle;
+int plotOpen;//1 if plots are being displayed, 0 otherwise

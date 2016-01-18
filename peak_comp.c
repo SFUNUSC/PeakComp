@@ -1,10 +1,16 @@
 #include "peak_comp.h"
 #include "read_config.c"
 
+
 int main(int argc, char *argv[])
 {
 
   FILE *expData,*simData[NSIMDATA];
+  
+  //set up handler to take action upon SIGINT (CTRL-C command)
+  struct sigaction sigIntHandler;
+  sigIntHandler.sa_handler = sigint_cleanup;
+  sigaction(SIGINT, &sigIntHandler, NULL);
 
   if(argc!=2)
     {
@@ -273,7 +279,7 @@ void plotSpectra()
           }
       }
 
-  gnuplot_ctrl *handle;    
+  plotOpen=1; 
   handle=gnuplot_init();
   printf("\n");
   for(i=0;i<numSpectra;i++)
@@ -308,5 +314,15 @@ void plotSpectra()
       gnuplot_resetplot(handle);
     }
   gnuplot_close(handle);
+  plotOpen=0;
   
+}
+
+//function run after CTRL-C, used to clean up temporary files generated
+//by the plotting library
+void sigint_cleanup()
+{
+  if(plotOpen==1)
+    gnuplot_close(handle); //cleans up temporary files  
+  exit(1); 
 }
