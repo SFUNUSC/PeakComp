@@ -194,34 +194,38 @@ void computeBackgroundandScaling(int numSimData, int addBG)
           for (j=0;j<numSimData;j++)
             for (k=0;k<numSimData;k++)
               linEq.matrix[j][k]=ss_sum[j][k];
+          for (j=0;j<numSimData;j++)
+            linEq.vector[j]=ms_sum[j];
         }
       else
         {
           linEq.dim=numSimData+2;
+          
+          //top-left 4 entries
+          linEq.matrix[0][0]=sum1;
+          linEq.matrix[0][1]=i_sum;
+          linEq.matrix[1][0]=i_sum;
+          linEq.matrix[1][1]=ii_sum;
+          
+          //regular simulated data entires (bottom-right)
           for (j=0;j<numSimData;j++)
-            {
-              linEq.matrix[j][j]=ss_sum[j][j];
-              if((j+1)<numSimData)
-                {
-                  linEq.matrix[j][j+1]=ss_sum[j][j+1];
-                  linEq.matrix[j+1][j]=ss_sum[j+1][j];
-                }
-              linEq.matrix[linEq.dim-2][j]=s_sum[j];
-              linEq.matrix[linEq.dim-1][j]=si_sum[j];
-              linEq.matrix[j][linEq.dim-2]=s_sum[j];
-              linEq.matrix[j][linEq.dim-1]=si_sum[j];
-              //printf("%i of %i\n",j,linEq.dim-1);
+            for (k=0;k<numSimData;k++)
+              linEq.matrix[j+2][k+2]=ss_sum[j][k];
+          
+          //remaining entires
+          for (j=0;j<numSimData;j++)
+            {     
+              linEq.matrix[0][2+j]=s_sum[j];
+              linEq.matrix[1][2+j]=si_sum[j];
+              linEq.matrix[2+j][0]=s_sum[j];
+              linEq.matrix[2+j][1]=si_sum[j];
             }
-          linEq.matrix[linEq.dim-2][linEq.dim-2]=sum1;
-          linEq.matrix[linEq.dim-2][linEq.dim-1]=i_sum;
-          linEq.matrix[linEq.dim-1][linEq.dim-2]=i_sum;
-          linEq.matrix[linEq.dim-1][linEq.dim-1]=ii_sum;
-          linEq.vector[linEq.dim-2]=m_sum;
-          linEq.vector[linEq.dim-1]=mi_sum;
+          
+          linEq.vector[0]=m_sum;
+          linEq.vector[1]=mi_sum;
+          for (j=0;j<numSimData;j++)
+            linEq.vector[j+2]=ms_sum[j];
         }
-      for (j=0;j<numSimData;j++)
-        linEq.vector[j]=ms_sum[j];
-      
       
       //solve system of equations and assign values
       if(!(solve_lin_eq(&linEq)==1))
@@ -229,20 +233,23 @@ void computeBackgroundandScaling(int numSimData, int addBG)
           printf("ERROR: Could not determine background and scaling parameters!\n");
           exit(-1);
         }
-      for (j=0;j<numSimData;j++)  
-        scaleFactor[j][spectrum[i]]=linEq.solution[j];
+      
       if(addBG==0)
         {
           bgA[spectrum[i]]=0.;
           bgB[spectrum[i]]=0.;
+          for (j=0;j<numSimData;j++)  
+            scaleFactor[j][spectrum[i]]=linEq.solution[j];
           printf("Spectrum %i - ",spectrum[i]);
           for (j=0;j<numSimData;j++)
             printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
         }
       else
         {
-          bgA[spectrum[i]]=linEq.solution[linEq.dim-2];
-          bgB[spectrum[i]]=linEq.solution[linEq.dim-1];
+          bgA[spectrum[i]]=linEq.solution[0];
+          bgB[spectrum[i]]=linEq.solution[1];
+          for (j=0;j<numSimData;j++)  
+            scaleFactor[j][spectrum[i]]=linEq.solution[j+2];
           printf("Spectrum %i: fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",spectrum[i],bgA[spectrum[i]],bgB[spectrum[i]]);
           for (j=0;j<numSimData;j++)
             printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
@@ -271,11 +278,11 @@ void plotSpectra()
         yexp[i][j-startCh[i]]=(double)expHist[spectrum[i]][j];
         if(addBackground==1)
           ybackground[i][j-startCh[i]]=bgA[spectrum[i]] + bgB[spectrum[i]]*j;
-        ysimsum[i][j-startCh[i]]=0.;
+        ysimsum[i][j-startCh[i]]=ybackground[i][j-startCh[i]];
         for (k=0;k<numSimData;k++)
           {
             ysim[k][i][j-startCh[i]]=scaledSimHist[k][spectrum[i]][j] - ybackground[i][j-startCh[i]];
-            ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j];
+            ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j] - ybackground[i][j-startCh[i]];
           }
       }
 
@@ -302,7 +309,11 @@ void plotSpectra()
               gnuplot_plot_xy(handle, x[i], ysim[j][i], endCh[i]-startCh[i]+1, str);
             }
           if((numSimData>1)||(addBackground==1))//plot sum
-            gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");
+            {
+              gnuplot_setcolor(handle, "black");
+              gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");
+              gnuplot_unsetcolor(handle);
+            }
         }
       else //simple plot
         gnuplot_plot_xy(handle, x[i], ysimsum[i], endCh[i]-startCh[i]+1, "Simulation and Background(sum)");

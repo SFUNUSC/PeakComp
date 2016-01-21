@@ -235,6 +235,22 @@ void gnuplot_setstyle(gnuplot_ctrl * h, char * plot_style)
     return ;
 }
 
+void gnuplot_setcolor(gnuplot_ctrl * h, char * color)
+{
+    if (strcmp(color, "black") &&
+        strcmp(color, "blue")) {
+        fprintf(stderr, "warning: unknown requested color: using default\n") ;
+        h->colSet=0;
+    } else {
+        h->colSet=1;
+        strcpy(h->col, color) ;
+    }
+    return ;
+}
+void gnuplot_unsetcolor(gnuplot_ctrl * h)
+{
+    h->colSet=0;
+}
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -706,8 +722,10 @@ void gnuplot_plot_atmpfile(gnuplot_ctrl * handle, char const* tmp_filename, char
 {
     char const *    cmd    = (handle->nplots > 0) ? "replot" : "plot";
     title                  = (title == NULL)      ? "(none)" : title;
-    gnuplot_cmd(handle, "%s \"%s\" title \"%s\" with %s", cmd, tmp_filename,
-                  title, handle->pstyle) ;
+    if(handle->colSet==0)
+        gnuplot_cmd(handle, "%s \"%s\" title \"%s\" with %s", cmd, tmp_filename,title, handle->pstyle) ;
+    else
+        gnuplot_cmd(handle, "%s \"%s\" title \"%s\" lt rgb \"%s\" with %s", cmd, tmp_filename,title, handle->col, handle->pstyle) ;
     handle->nplots++ ;
     return ;
 }

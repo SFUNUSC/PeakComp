@@ -60,7 +60,9 @@ typedef struct _GNUPLOT_CTRL_ {
     int       nplots ;
     /** Current plotting style */
     char      pstyle[32] ;
-
+    /** Plotting color */
+    char      col[32] ;
+    int       colSet;
     /** Pointer to table of names of temporary files */
     char*      tmp_filename_tbl[GP_MAX_TMP_FILES] ;
     /** Number of temporary files */
@@ -148,6 +150,11 @@ void gnuplot_cmd(gnuplot_ctrl *  handle, char const *  cmd, ...);
  */
 /*--------------------------------------------------------------------------*/
 void gnuplot_setstyle(gnuplot_ctrl * h, char * plot_style);
+
+//Functions for seting color of output plots
+//Added by J. Williams
+void gnuplot_setcolor(gnuplot_ctrl * h, char * color);
+void gnuplot_unsetcolor(gnuplot_ctrl * h);
 
 /*-------------------------------------------------------------------------*/
 /**
