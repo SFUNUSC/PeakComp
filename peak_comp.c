@@ -230,7 +230,10 @@ void computeBackgroundandScaling(int numSimData, int addBG)
       //solve system of equations and assign values
       if(!(solve_lin_eq(&linEq)==1))
         {
-          printf("ERROR: Could not determine background and scaling parameters!\n");
+          if(m_sum==0)
+            printf("ERROR: Experiment data (spectrum %i) has no entires in the specified fitting region!\n",spectrum[i]);
+          else
+            printf("ERROR: Could not determine background and scaling parameters!\n");
           exit(-1);
         }
       
