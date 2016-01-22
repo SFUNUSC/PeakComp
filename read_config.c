@@ -35,6 +35,8 @@ void readConfigFile(const char * fileName)
                 {
                   if(strcmp(str1,"yes")==0)
                     simDataFixedAmp[numSimData]=1;
+                  else if(strcmp(str1,"rel")==0)
+                    simDataFixedAmp[numSimData]=2;
                   else
                     {
                       simDataFixedAmp[numSimData]=0;
@@ -101,6 +103,8 @@ void readConfigFile(const char * fileName)
       printf("Taking simulated data from file (%i of %i): %s\n",index+1,numSimData,simDataName[index]);
       if(simDataFixedAmp[index]==1)
         printf("Fixing scaling factor for this data to %lf\n",simDataFixedAmpValue[index]);
+      if(simDataFixedAmp[index]==2)
+        printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",simDataFixedAmpValue[index]);
     }
   for(index=0;index<numSpectra;index++)
     printf("Will compare spectrum %i from channels %i to %i.\n",spectrum[index],startCh[index],endCh[index]);

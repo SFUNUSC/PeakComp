@@ -80,7 +80,14 @@ int main(int argc, char *argv[])
               fittedSimHist[fi][j][k]=simHist[i][j][k];
           fi++;
         }
-      else if(simDataFixedAmpValue[i]!=0.)//data has scaling factor fixed (will not be fitted)
+      else if(simDataFixedAmp[i]==2)//data scaling is fixed relative to the previous fitted dataset
+        {
+          if(fi>0)
+            for (j=0;j<=endSpectrum;j++)
+              for (k=0;k<S32K;k++)
+                fittedSimHist[fi-1][j][k]+=simDataFixedAmpValue[i]*simHist[i][j][k];//add this data to the data that it is scaled relative to
+        }
+      else if(simDataFixedAmpValue[i]!=0.)//data scaling is fixed to a specified value (will not be fitted)
         for (j=0;j<=endSpectrum;j++)
           for (k=0;k<S32K;k++)
             fittedExpHist[j][k]-=simDataFixedAmpValue[i]*simHist[i][j][k];
@@ -140,9 +147,9 @@ void compareSpectra()
           if(expHist[spectrum[i]][j]!=0)//avoid dividing by zero
             {
               //get the sum of all experimental data in the given bin 
-              sumSimValue=0;
+              sumSimValue = bgA[spectrum[i]] + bgB[spectrum[i]]*j;
               for (k=0;k<numSimData;k++)
-                sumSimValue+=scaledSimHist[k][spectrum[i]][j];
+                sumSimValue+=scaledSimHist[k][spectrum[i]][j] - bgA[spectrum[i]] - bgB[spectrum[i]]*j;
               //increment the chisq value
               spectChisq[i]+=((expHist[spectrum[i]][j]-sumSimValue)*(expHist[spectrum[i]][j]-sumSimValue))/((double)expHist[spectrum[i]][j]);
             }
@@ -278,14 +285,22 @@ void computeBackgroundandScaling(int numData, int addBG)
     }
     
   //generate scaling factors for all spectra, including those that weren't fitted
-  k=0;
+  int fd=0;//counter for number of datasets which have fit 
+  int lfd=-1;//index of the last dataset which was fit (not fixed amplitude)
   for (i=0;i<numSimData;i++)
     {
       if(simDataFixedAmp[i]==0)//data was fit
         {
           for (j=0;j<numSpectra;j++)
-            scaleFactor[i][spectrum[j]]=fittedScaleFactor[k][spectrum[j]];
-          k++;
+            scaleFactor[i][spectrum[j]]=fittedScaleFactor[fd][spectrum[j]];
+          fd++;
+          lfd=i;
+        }
+      else if(simDataFixedAmp[i]==2)//data is scaled relative to the previous fit data
+        {
+          if(lfd>=0)//has a previous dataset been fit?
+            for (j=0;j<numSpectra;j++)
+              scaleFactor[i][spectrum[j]]=simDataFixedAmpValue[i]*scaleFactor[lfd][spectrum[j]];
         }
       else//data wasn't fit
         for (j=0;j<numSpectra;j++)
