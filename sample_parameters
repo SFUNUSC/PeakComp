@@ -2,9 +2,9 @@ EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
 ADD_BACKGROUND              yes
 PLOT_OUTPUT                 yes
 
-SIMULATED_DATA
-test.mca
-test2.mca
+SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
+test.mca          no            1
+test2.mca         no            1
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 3         5500          6000

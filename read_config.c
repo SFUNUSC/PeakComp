@@ -6,11 +6,13 @@ int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNum
 int addBackground;//0=no,1=constant background
 int plotOutput;//0=no,1=yes,2=detailed
 char expDataName[256],simDataName[NSIMDATA][256];//filenames for the simulated and experiment data
+int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
+double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
 char str[256],str1[256],str2[256];
+
 
 void readConfigFile(const char * fileName) 
 {
-
   int index=0;
   numSpectra=0;
   endSpectrum=0;
@@ -25,7 +27,18 @@ void readConfigFile(const char * fileName)
     {
       if(fgets(str,256,config)!=NULL)
         {
-          
+        
+          if(numSimData<NSIMDATA)
+            if(sscanf(str,"%i %i %i",&spectrum[index],&startCh[index],&endCh[index])!=3) //no spectrum and channel data
+              if(sscanf(str,"%s %s %lf",simDataName[numSimData],str1,&simDataFixedAmpValue[numSimData])==3) //simulated dataset info
+                {
+                  if(strcmp(str1,"yes")==0)
+                    simDataFixedAmp[numSimData]=1;
+                  else
+                    simDataFixedAmp[numSimData]=0;
+                  numSimData++;
+                }
+              
           if(index<NSPECT)
             if(sscanf(str,"%i %i %i",&spectrum[index],&startCh[index],&endCh[index])==3) //spectrum and channel data
               {
@@ -36,6 +49,7 @@ void readConfigFile(const char * fileName)
                 index++;
                 numSpectra++;
               }
+              
           if(sscanf(str,"%s %s",str1,str2)==2) //single parameter data
             {
               if(strcmp(str1,"EXPERIMENT_DATA")==0)
@@ -57,6 +71,7 @@ void readConfigFile(const char * fileName)
                     plotOutput=0;
                 }
             }
+          
           if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
             {
               if(strcmp(str1,"<---END_OF_PARAMETERS--->")==0)
@@ -65,6 +80,8 @@ void readConfigFile(const char * fileName)
                 if(numSimData<NSIMDATA)
                   {
                     strcpy(simDataName[numSimData],str1);
+                    simDataFixedAmp[numSimData]=0;
+                    simDataFixedAmpValue[numSimData]=1;
                     numSimData++;
                   }
             }
@@ -74,7 +91,11 @@ void readConfigFile(const char * fileName)
   
   printf("Taking experiment data from file: %s\n",expDataName);
   for(index=0;index<numSimData;index++)
-    printf("Taking simulated data from file (%i of %i): %s\n",index+1,numSimData,simDataName[index]);
+    {
+      printf("Taking simulated data from file (%i of %i): %s\n",index+1,numSimData,simDataName[index]);
+      if(simDataFixedAmp[index]==1)
+        printf("Fixing scaling factor for this data to %lf\n",simDataFixedAmpValue[index]);
+    }
   for(index=0;index<numSpectra;index++)
     printf("Will compare spectrum %i from channels %i to %i.\n",spectrum[index],startCh[index],endCh[index]);
   if(addBackground==0)
