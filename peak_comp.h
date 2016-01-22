@@ -16,12 +16,12 @@ void plotSpectra();
 void sigint_cleanup();
 
 //global variables (umad compsci profs?)
-int expHist[NSPECT][S32K],simHist[NSIMDATA][NSPECT][S32K];
+int expHist[NSPECT][S32K],fittedExpHist[NSPECT][S32K],simHist[NSIMDATA][NSPECT][S32K],fittedSimHist[NSIMDATA][NSPECT][S32K],tmpHist[NSPECT][S32K];
 char str[256];
 double chisq;
 double spectChisq[NSPECT];
 double expInt, simInt[NSIMDATA];//integral of the simulated and experimental data over the specified channel range
-double scaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
+double scaleFactor[NSIMDATA][NSPECT], fittedScaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
 double scaledSimHist[NSIMDATA][NSPECT][S32K];
 int numBinsUsed;
 int i,j,k,l;

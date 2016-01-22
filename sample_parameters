@@ -30,8 +30,8 @@ no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
 detailed: Same as 'yes', except plot all simulated datasets and background as well.
 
-SIMULATED_DATA
-Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.
+SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
+Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.  If FIX_SCALING is set to 'yes', the data will be scaled by the value specified under SCALING_VALUE, rather than the value obtained by chisq minimization (other scaling factors will still be determined via chisq minimization).
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
