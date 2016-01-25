@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
   memset(simHist,0,sizeof(simHist));
   memset(fittedSimHist,0,sizeof(fittedSimHist));
   memset(scaledSimHist,0,sizeof(scaledSimHist));
-  memset(tmpHist,0,sizeof(tmpHist));
 
   readConfigFile(argv[1]); //grab data from the config file
 
@@ -112,14 +111,6 @@ int main(int argc, char *argv[])
           scaledSimHist[i][spectrum[j]][k]=scaledSimHist[i][spectrum[j]][k] + bgA[spectrum[j]] + bgB[spectrum[j]]*k;
       
   compareSpectra();
-      
-  //print output
-  printf("\nCOMPARISON DATA\n---------------\n");
-  for (i=0;i<numSpectra;i++)
-    printf("chisq (spectrum %i): %f\n",spectrum[i],spectChisq[i]);
-  printf("chisq (total): %f\n",chisq);
-  printf("number of bins: %i\n",numBinsUsed);
-  printf("chisq (total) / number of bins: %f\n",chisq/(numBinsUsed));
   
   if(plotOutput>=1)
     plotSpectra();
@@ -131,14 +122,14 @@ int main(int argc, char *argv[])
 //function compares spectra and gets chisq and other stats
 void compareSpectra()
 {
-
   //initialize values
+  double chisq=0;
+  double spectChisq[NSPECT];
   int binsSkipped=0;
-  numBinsUsed=0;
+  int numBinsUsed=0;
   double sumSimValue=0;
   
   //compute chisq for data in the spectra
-  chisq=0;
   for (i=0;i<numSpectra;i++)
     {
       spectChisq[i]=0;
@@ -168,6 +159,15 @@ void compareSpectra()
   for (i=0;i<numSpectra;i++)
     numBinsUsed += (endCh[i]-startCh[i]+1);
   numBinsUsed -= binsSkipped;
+  
+  //print output
+  printf("\nCOMPARISON DATA\n---------------\n");
+  for (i=0;i<numSpectra;i++)
+    printf("chisq (spectrum %i): %f\n",spectrum[i],spectChisq[i]);
+  printf("chisq (total): %f\n",chisq);
+  printf("number of bins: %i\n",numBinsUsed);
+  printf("chisq (total) / number of bins: %f\n",chisq/(numBinsUsed));
+  
 }
 
 
@@ -344,7 +344,8 @@ void computeBackgroundandScaling(int numData, int addBG)
 //function handles plotting of data, using the gnuplot_i library
 void plotSpectra()
 {
-
+  char str[256];
+  
   //generate plot data
   double x[numSpectra][maxNumCh];
   double yexp[numSpectra][maxNumCh];

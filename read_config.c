@@ -1,18 +1,10 @@
 #include "peak_comp.h"
 #include <string.h>
 
-FILE *config;
-int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
-int addBackground;//0=no,1=constant background
-int plotOutput;//0=no,1=yes,2=detailed
-char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
-int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
-double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
-char str[256],str1[256],str2[256];
-
-
 void readConfigFile(const char * fileName) 
 {
+  FILE *config;
+  char str[256],str1[256],str2[256];
   int index=0;
   numSpectra=0;
   endSpectrum=0;
