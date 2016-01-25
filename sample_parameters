@@ -35,7 +35,7 @@ Contains the path(s) to the .mca file(s) containing simulated data.  Multiple da
 FIX_SCALING
 no: The specified data will be fit via chisq minimization to find its scaling factor.
 yes: The specified data will be scaled by the value specified under SCALING_VALUE, rather than the value obtained by chisq minimization (other scaling factors will still be determined via chisq minimization).
-rel: The specified data will be scaled by the value specified under SCALING_VALUE, relative to the scaling factor of the next most previous dataset that was fit via chisq minimization (FIX_SCALING set to 'no').
+rel: The specified data will be scaled by the value specified under SCALING_VALUE, relative to the scaling factor of the previous dataset (if there is no previous dataset, the scaling will be set to 0).
 
 SPECTRUM  START_CHANNEL END_CHANNEL
 Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.

@@ -177,116 +177,122 @@ void compareSpectra()
 //addBG=0: no background addition
 void computeBackgroundandScaling(int numData, int addBG)
 {
+
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,si_sum[NSIMDATA],i_sum,ii_sum,sum1; //sums needed to construct system of equations
   lin_eq_type linEq;
   printf("\n");  
   
-  for (i=0;i<numSpectra;i++)
+  if(numData>0)
     {
-      //initialize all sums to 0
-      m_sum=0.;
-      mi_sum=0.;
-      i_sum=0.;
-      ii_sum=0.;
-      sum1=0.;
-      for (j=0;j<numData;j++)
+      for (i=0;i<numSpectra;i++)
         {
-          s_sum[j]=0.;
-          ms_sum[j]=0.;
-          si_sum[j]=0.;
-          for (k=0;k<numData;k++)
-            ss_sum[j][k]=0.;
-        }
-      
-      //construct sums  
-      for (j=startCh[i];j<=endCh[i];j++)
-        if(expHist[spectrum[i]][j]!=0)
-          {
-            m_sum+=fittedExpHist[spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
-            mi_sum+=fittedExpHist[spectrum[i]][j]*j/((double)expHist[spectrum[i]][j]);
-            i_sum+=j/((double)expHist[spectrum[i]][j]);
-            ii_sum+=j*j/((double)expHist[spectrum[i]][j]);
-            sum1+=1./((double)expHist[spectrum[i]][j]);
-            for (k=0;k<numData;k++)
-              {
-                s_sum[k]+=fittedSimHist[k][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
-                ms_sum[k]+=fittedExpHist[spectrum[i]][j]*fittedSimHist[k][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
-                si_sum[k]+=fittedSimHist[k][spectrum[i]][j]*j/((double)expHist[spectrum[i]][j]);
-                for (l=0;l<numData;l++)
-                  ss_sum[k][l]+=fittedSimHist[k][spectrum[i]][j]*fittedSimHist[l][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
-              }
-          }
-      
-      //construct system of equations (matrix/vector entries) 
-      if(addBG==0)
-        {
-          linEq.dim=numData;
+          //initialize all sums to 0
+          m_sum=0.;
+          mi_sum=0.;
+          i_sum=0.;
+          ii_sum=0.;
+          sum1=0.;
           for (j=0;j<numData;j++)
-            for (k=0;k<numData;k++)
-              linEq.matrix[j][k]=ss_sum[j][k];
-          for (j=0;j<numData;j++)
-            linEq.vector[j]=ms_sum[j];
-        }
-      else
-        {
-          linEq.dim=numData+2;
-          
-          //top-left 4 entries
-          linEq.matrix[0][0]=sum1;
-          linEq.matrix[0][1]=i_sum;
-          linEq.matrix[1][0]=i_sum;
-          linEq.matrix[1][1]=ii_sum;
-          
-          //regular simulated data entires (bottom-right)
-          for (j=0;j<numData;j++)
-            for (k=0;k<numData;k++)
-              linEq.matrix[j+2][k+2]=ss_sum[j][k];
-          
-          //remaining entires
-          for (j=0;j<numData;j++)
-            {     
-              linEq.matrix[0][2+j]=s_sum[j];
-              linEq.matrix[1][2+j]=si_sum[j];
-              linEq.matrix[2+j][0]=s_sum[j];
-              linEq.matrix[2+j][1]=si_sum[j];
+            {
+              s_sum[j]=0.;
+              ms_sum[j]=0.;
+              si_sum[j]=0.;
+              for (k=0;k<numData;k++)
+                ss_sum[j][k]=0.;
             }
           
-          linEq.vector[0]=m_sum;
-          linEq.vector[1]=mi_sum;
-          for (j=0;j<numData;j++)
-            linEq.vector[j+2]=ms_sum[j];
-        }
-      
-      //solve system of equations and assign values
-      if(!(solve_lin_eq(&linEq)==1))
-        {
-          if(m_sum==0)
-            printf("ERROR: Experiment data (spectrum %i) has no entires in the specified fitting region!\n",spectrum[i]);
+          //construct sums  
+          for (j=startCh[i];j<=endCh[i];j++)
+            if(expHist[spectrum[i]][j]!=0)
+              {
+                m_sum+=fittedExpHist[spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
+                mi_sum+=fittedExpHist[spectrum[i]][j]*j/((double)expHist[spectrum[i]][j]);
+                i_sum+=j/((double)expHist[spectrum[i]][j]);
+                ii_sum+=j*j/((double)expHist[spectrum[i]][j]);
+                sum1+=1./((double)expHist[spectrum[i]][j]);
+                for (k=0;k<numData;k++)
+                  {
+                    s_sum[k]+=fittedSimHist[k][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
+                    ms_sum[k]+=fittedExpHist[spectrum[i]][j]*fittedSimHist[k][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
+                    si_sum[k]+=fittedSimHist[k][spectrum[i]][j]*j/((double)expHist[spectrum[i]][j]);
+                    for (l=0;l<numData;l++)
+                      ss_sum[k][l]+=fittedSimHist[k][spectrum[i]][j]*fittedSimHist[l][spectrum[i]][j]/((double)expHist[spectrum[i]][j]);
+                  }
+              }
+          
+          //construct system of equations (matrix/vector entries) 
+          if(addBG==0)
+            {
+              linEq.dim=numData;
+              for (j=0;j<numData;j++)
+                for (k=0;k<numData;k++)
+                  linEq.matrix[j][k]=ss_sum[j][k];
+              for (j=0;j<numData;j++)
+                linEq.vector[j]=ms_sum[j];
+            }
           else
-            printf("ERROR: Could not determine background and scaling parameters!\n");
-          exit(-1);
-        }
-      
-      if(addBG==0)
-        {
-          bgA[spectrum[i]]=0.;
-          bgB[spectrum[i]]=0.;
-          for (j=0;j<numData;j++)  
-            fittedScaleFactor[j][spectrum[i]]=linEq.solution[j];
-        }
-      else
-        {
-          bgA[spectrum[i]]=linEq.solution[0];
-          bgB[spectrum[i]]=linEq.solution[1];
-          for (j=0;j<numData;j++)
-            fittedScaleFactor[j][spectrum[i]]=linEq.solution[j+2];
-        }
+            {
+              linEq.dim=numData+2;
+              
+              //top-left 4 entries
+              linEq.matrix[0][0]=sum1;
+              linEq.matrix[0][1]=i_sum;
+              linEq.matrix[1][0]=i_sum;
+              linEq.matrix[1][1]=ii_sum;
+              
+              //regular simulated data entires (bottom-right)
+              for (j=0;j<numData;j++)
+                for (k=0;k<numData;k++)
+                  linEq.matrix[j+2][k+2]=ss_sum[j][k];
+              
+              //remaining entires
+              for (j=0;j<numData;j++)
+                {     
+                  linEq.matrix[0][2+j]=s_sum[j];
+                  linEq.matrix[1][2+j]=si_sum[j];
+                  linEq.matrix[2+j][0]=s_sum[j];
+                  linEq.matrix[2+j][1]=si_sum[j];
+                }
+              
+              linEq.vector[0]=m_sum;
+              linEq.vector[1]=mi_sum;
+              for (j=0;j<numData;j++)
+                linEq.vector[j+2]=ms_sum[j];
+            }
+          
+          //solve system of equations and assign values
+          if(!(solve_lin_eq(&linEq)==1))
+            {
+              if(m_sum==0)
+                printf("ERROR: Experiment data (spectrum %i) has no entires in the specified fitting region!\n",spectrum[i]);
+              else
+                printf("ERROR: Could not determine background and scaling parameters!\n");
+              exit(-1);
+            }
+          
+          if(addBG==0)
+            {
+              bgA[spectrum[i]]=0.;
+              bgB[spectrum[i]]=0.;
+              for (j=0;j<numData;j++)  
+                fittedScaleFactor[j][spectrum[i]]=linEq.solution[j];
+            }
+          else
+            {
+              bgA[spectrum[i]]=linEq.solution[0];
+              bgB[spectrum[i]]=linEq.solution[1];
+              for (j=0;j<numData;j++)
+                fittedScaleFactor[j][spectrum[i]]=linEq.solution[j+2];
+            }
 
+        }
     }
+  else
+    printf("NOTE: All parameters are fixed, no chisq minimzation was performed.\n");
     
   //generate scaling factors for all spectra, including those that weren't fitted
-  int fd=0;//counter for number of datasets which have fit 
-  int lfd=-1;//index of the last dataset which was fit (not fixed amplitude)
+  int fd=0;//counter for number of datasets which have fit (not fixed amplitude)
+  int ld=-1;//index of the last dataset for which a scaling factor was determined
   for (i=0;i<numSimData;i++)
     {
       if(simDataFixedAmp[i]==0)//data was fit
@@ -294,17 +300,21 @@ void computeBackgroundandScaling(int numData, int addBG)
           for (j=0;j<numSpectra;j++)
             scaleFactor[i][spectrum[j]]=fittedScaleFactor[fd][spectrum[j]];
           fd++;
-          lfd=i;
+          ld=i;
         }
       else if(simDataFixedAmp[i]==2)//data is scaled relative to the previous fit data
         {
-          if(lfd>=0)//has a previous dataset been fit?
+          if(ld>=0)//has a previous dataset been fit?
             for (j=0;j<numSpectra;j++)
-              scaleFactor[i][spectrum[j]]=simDataFixedAmpValue[i]*scaleFactor[lfd][spectrum[j]];
+              scaleFactor[i][spectrum[j]]=simDataFixedAmpValue[i]*scaleFactor[ld][spectrum[j]];
+          ld=i;
         }
       else//data wasn't fit
-        for (j=0;j<numSpectra;j++)
-          scaleFactor[i][spectrum[j]]=simDataFixedAmpValue[i];   
+        {
+          for (j=0;j<numSpectra;j++)
+            scaleFactor[i][spectrum[j]]=simDataFixedAmpValue[i];
+          ld=i;
+        }
     }
   
   //print parameters  
