@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         for (k=startCh[j];k<=endCh[j];k++)
           scaledSimHist[i][spectrum[j]][k]=scaledSimHist[i][spectrum[j]][k] + bgA[spectrum[j]] + bgB[spectrum[j]]*k;
       
-  compareSpectra();
+  compareSpectra(numFittedSimData + addBackground*2);
   
   if(plotOutput>=1)
     plotSpectra();
@@ -120,21 +120,26 @@ int main(int argc, char *argv[])
 
 
 //function compares spectra and gets chisq and other stats
-void compareSpectra()
+void compareSpectra(int numFittedParameters)
 {
   //initialize values
   double chisq=0;
+  double redChisq=0;
   double spectChisq[NSPECT];
-  int binsSkipped=0;
-  int numBinsUsed=0;
+  double spectRedChisq[NSPECT];
+  int binsSkipped[NSPECT];
+  int numBinsUsed[NSPECT];
+  int sumBinsUsed=0;
+  int sumBinsSkipped=0;
   double sumSimValue=0;
+  memset(spectRedChisq,0,sizeof(spectRedChisq));
+  memset(spectChisq,0,sizeof(spectChisq));
+  memset(binsSkipped,0,sizeof(binsSkipped));
+  memset(numBinsUsed,0,sizeof(numBinsUsed));
   
   //compute chisq for data in the spectra
   for (i=0;i<numSpectra;i++)
-    {
-      spectChisq[i]=0;
       for (j=startCh[i];j<=endCh[i];j++)
-        {  
           if(expHist[spectrum[i]][j]!=0)//avoid dividing by zero
             {
               //get the sum of all experimental data in the given bin 
@@ -145,28 +150,36 @@ void compareSpectra()
               spectChisq[i]+=((expHist[spectrum[i]][j]-sumSimValue)*(expHist[spectrum[i]][j]-sumSimValue))/((double)expHist[spectrum[i]][j]);
             }
           else
-            binsSkipped++;
-        }
-      chisq+=spectChisq[i];
-    }
+            binsSkipped[i]++;
       
   //print warnings
-  if(binsSkipped>0)
+  for (i=0;i<numSpectra;i++)
+    sumBinsSkipped+=binsSkipped[i];
+  if(sumBinsSkipped>0)
     {
       printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
-      printf("Bins skipped: %i.\n",binsSkipped);
+      printf("Bins skipped: %i.\n",sumBinsSkipped);
     }
+    
+  //compute total chisq and reduced total chisq
   for (i=0;i<numSpectra;i++)
-    numBinsUsed += (endCh[i]-startCh[i]+1);
-  numBinsUsed -= binsSkipped;
+    {
+      numBinsUsed[i]=(endCh[i]-startCh[i]+1)-binsSkipped[i];
+      sumBinsUsed+=numBinsUsed[i];
+      chisq+=spectChisq[i]; 
+      spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters-1);
+    }
+  redChisq=chisq/(sumBinsUsed-numFittedParameters-1);
   
   //print output
   printf("\nCOMPARISON DATA\n---------------\n");
-  for (i=0;i<numSpectra;i++)
-    printf("chisq (spectrum %i): %f\n",spectrum[i],spectChisq[i]);
+  if(numSpectra>1)
+    for (i=0;i<numSpectra;i++)
+      printf("spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",spectrum[i],startCh[i],endCh[i],spectChisq[i],spectRedChisq[i]);
   printf("chisq (total): %f\n",chisq);
-  printf("number of bins: %i\n",numBinsUsed);
-  printf("chisq (total) / number of bins: %f\n",chisq/(numBinsUsed));
+  printf("number of bins (total): %i\n",sumBinsUsed);
+  printf("number of fitted parameters: %i\n",numFittedParameters);
+  printf("reduced chisq (total): %f\n",redChisq);
   
 }
 
@@ -321,7 +334,7 @@ void computeBackgroundandScaling(int numData, int addBG)
   for (i=0;i<numSpectra;i++)
     if(addBG==0)
       {
-        printf("Spectrum %i - ",spectrum[i]);
+        printf("Spectrum %i, channel %i to %i - ",spectrum[i],startCh[i],endCh[i]);
         for (j=0;j<numSimData;j++)
           if(simDataFixedAmp[j]==0)
             printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);
@@ -330,7 +343,7 @@ void computeBackgroundandScaling(int numData, int addBG)
       }
     else
       {
-        printf("Spectrum %i: fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",spectrum[i],bgA[spectrum[i]],bgB[spectrum[i]]);
+        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",spectrum[i],startCh[i],endCh[i],bgA[spectrum[i]],bgB[spectrum[i]]);
         for (j=0;j<numSimData;j++)
           if(simDataFixedAmp[j]==0)
             printf("Scaling factor for data from file %s: %f\n",simDataName[j],scaleFactor[j][spectrum[i]]);

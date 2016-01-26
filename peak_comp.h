@@ -10,7 +10,7 @@
 #define NSIMDATA    MAX_DIM-2 //2 parameters reserved for background fitting
 
 //forward declarations
-void compareSpectra();
+void compareSpectra(int);
 void computeBackgroundandScaling(int,int);
 void plotSpectra();
 void sigint_cleanup();
