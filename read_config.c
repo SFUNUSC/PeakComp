@@ -69,6 +69,13 @@ void readConfigFile(const char * fileName)
                   else
                     plotOutput=0;
                 }
+              if(strcmp(str1,"SAVE_OUTPUT")==0)
+                {
+                  if(strcmp(str2,"yes")==0)
+                    saveOutput=1;
+                  else
+                    saveOutput=0;
+                }
             }
           
           if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
@@ -89,6 +96,7 @@ void readConfigFile(const char * fileName)
     }
   fclose(config);
   
+  //print parameters read from the file
   printf("Taking experiment data from file: %s\n",expDataName);
   for(index=0;index<numSimData;index++)
     {
@@ -110,6 +118,26 @@ void readConfigFile(const char * fileName)
     printf("Will plot output data.\n");
   if(plotOutput==2)
     printf("Will plot detailed output data.\n");
+  if(saveOutput==0)
+    printf("Will not save fitted simulation data.\n");
+  if(saveOutput==1)
+    {
+      if(addBackground==0)
+        {
+          if(numSimData>1)
+            printf("Will save fitted simulation data to files fit_sim0.mca through fit_sim%i.mca.\n",numSimData-1);
+          else
+            printf("Will save fitted simulation data to file fit_sim0.mca.\n");
+        }
+      else if(addBackground==1)
+        {
+          if(numSimData>1)
+            printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca through fit_sim%i.mca.\n",numSimData-1);
+          else
+            printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca.\n");
+        }
+    }
+
   
   printf("Finished reading parameter file...\n");
   

@@ -101,19 +101,16 @@ int main(int argc, char *argv[])
   //scale simulated data
   for (i=0;i<numSimData;i++)
     for (j=0;j<numSpectra;j++)
-      for (k=startCh[j];k<=endCh[j];k++)
+      for (k=0;k<S32K;k++)
         scaledSimHist[i][spectrum[j]][k]=scaleFactor[i][spectrum[j]]*simHist[i][spectrum[j]][k];
-  //add background to simulated data
-  if(addBackground==1)
-    for (i=0;i<numSimData;i++)
-      for (j=0;j<numSpectra;j++)
-        for (k=startCh[j];k<=endCh[j];k++)
-          scaledSimHist[i][spectrum[j]][k]=scaledSimHist[i][spectrum[j]][k] + bgA[spectrum[j]] + bgB[spectrum[j]]*k;
       
   compareSpectra(numFittedSimData + addBackground*2);
   
   if(plotOutput>=1)
     plotSpectra();
+  
+  if(saveOutput==1)
+    saveSpectra();
 
   return 0; //great success
 }
@@ -145,7 +142,7 @@ void compareSpectra(int numFittedParameters)
               //get the sum of all experimental data in the given bin 
               sumSimValue = bgA[spectrum[i]] + bgB[spectrum[i]]*j;
               for (k=0;k<numSimData;k++)
-                sumSimValue+=scaledSimHist[k][spectrum[i]][j] - bgA[spectrum[i]] - bgB[spectrum[i]]*j;
+                sumSimValue+=scaledSimHist[k][spectrum[i]][j];
               //increment the chisq value
               spectChisq[i]+=((expHist[spectrum[i]][j]-sumSimValue)*(expHist[spectrum[i]][j]-sumSimValue))/((double)expHist[spectrum[i]][j]);
             }
@@ -205,14 +202,10 @@ void computeBackgroundandScaling(int numData, int addBG)
           i_sum=0.;
           ii_sum=0.;
           sum1=0.;
-          for (j=0;j<numData;j++)
-            {
-              s_sum[j]=0.;
-              ms_sum[j]=0.;
-              si_sum[j]=0.;
-              for (k=0;k<numData;k++)
-                ss_sum[j][k]=0.;
-            }
+          memset(s_sum,0,sizeof(s_sum));
+          memset(ms_sum,0,sizeof(ms_sum));
+          memset(si_sum,0,sizeof(si_sum));
+          memset(ss_sum,0,sizeof(ss_sum));
           
           //construct sums  
           for (j=startCh[i];j<=endCh[i];j++)
@@ -376,8 +369,8 @@ void plotSpectra()
         ysimsum[i][j-startCh[i]]=ybackground[i][j-startCh[i]];
         for (k=0;k<numSimData;k++)
           {
-            ysim[k][i][j-startCh[i]]=scaledSimHist[k][spectrum[i]][j] - ybackground[i][j-startCh[i]];
-            ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j] - ybackground[i][j-startCh[i]];
+            ysim[k][i][j-startCh[i]]=scaledSimHist[k][spectrum[i]][j];
+            ysimsum[i][j-startCh[i]]+=scaledSimHist[k][spectrum[i]][j];
           }
       }
 
@@ -423,6 +416,66 @@ void plotSpectra()
   plotOpen=0;
   
 }
+
+
+//function handles saving of fitted data
+void saveSpectra()
+{
+  FILE *output;
+  char str[256];
+  //allocate arrays
+  int ***outHist=(int ***)calloc(numSimData,sizeof(int**));
+  for (i=0;i<numSimData;i++)
+    {
+      outHist[i] = (int **)calloc(numSpectra,sizeof(int*));
+      for (j=0;j<numSpectra;j++)
+        outHist[i][j] = (int *)calloc(S32K,sizeof(int));
+    }
+  int **bgHist=(int **)calloc(numSpectra,sizeof(int*));
+  for (i=0;i<numSpectra;i++)
+    bgHist[i] = (int *)calloc(S32K,sizeof(int));
+  
+  printf("Saving scaled simulation data to output file(s)...\n");
+  
+  //construct arrays
+  for (i=0;i<numSpectra;i++)
+    for (j=0;j<S32K;j++)
+      {
+        if(addBackground==1)
+          bgHist[i][j]=(int)(bgA[spectrum[i]] + bgB[spectrum[i]]*j);
+        for (k=0;k<numSimData;k++)
+          outHist[k][i][j]=(int)(scaledSimHist[k][spectrum[i]][j]);
+      }
+
+  //save arrays to .mca files  
+  if(addBackground==1)
+    {
+      if((output=fopen("fit_background.mca","w"))==NULL)
+        {
+          printf("ERROR: Cannot open the output file fit_background.mca!\n");
+          exit(-1);
+        }
+      for (i=0;i<numSpectra;i++)
+        fwrite(bgHist[i],S32K*sizeof(int),1,output);
+      fclose(output);
+    }
+  for (i=0;i<numSimData;i++)
+    {
+      sprintf(str,"fit_sim%i.mca",i);
+      if((output=fopen(str,"w"))==NULL)
+        {
+          printf("ERROR: Cannot open the output file %s!\n",str);
+          exit(-1);
+        }
+      for (j=0;j<numSpectra;j++)
+        fwrite(outHist[i][j],S32K*sizeof(int),1,output);
+      fclose(output);
+    }
+  free(outHist);
+  free(bgHist);
+  
+}
+
 
 //function run after CTRL-C, used to clean up temporary files generated
 //by the plotting library

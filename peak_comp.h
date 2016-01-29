@@ -13,6 +13,7 @@
 void compareSpectra(int);
 void computeBackgroundandScaling(int,int);
 void plotSpectra();
+void saveSpectra();
 void sigint_cleanup();
 
 //global variables (umad compsci profs?)
@@ -26,6 +27,7 @@ int plotOpen;//1 if plots are being displayed, 0 otherwise
 int spectrum[NSPECT],startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
 int addBackground;//0=no,1=constant background
 int plotOutput;//0=no,1=yes,2=detailed
+int saveOutput;//0=no,1=yes
 char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
 int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
 double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
