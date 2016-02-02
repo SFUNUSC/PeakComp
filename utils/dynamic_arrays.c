@@ -1,5 +1,29 @@
 #include "dynamic_arrays.h"
 
+double*** allocateArrayD3(int dim1, int dim2, int dim3)
+{ 
+  int i,j;
+  double ***array=(double ***)calloc(dim1,sizeof(double**));
+  for (i=0;i<dim1;i++)
+    {
+      array[i] = (double **)calloc(dim2,sizeof(double*));
+      for (j=0;j<dim2;j++)
+        array[i][j] = (double *)calloc(dim3,sizeof(double));
+    }
+
+  return (double***)array;
+}
+
+double** allocateArrayD2(int dim1, int dim2)
+{ 
+  int i;
+  double **array=(double **)calloc(dim1,sizeof(double**));
+  for (i=0;i<dim1;i++)
+      array[i] = (double *)calloc(dim2,sizeof(double*));
+
+  return (double**)array;
+}
+
 int*** allocateArrayI3(int dim1, int dim2, int dim3)
 { 
   int i,j;

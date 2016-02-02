@@ -4,9 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-
-  FILE *expData,*simData[NSIMDATA];
-  
+ 
   //set up handler to take action upon SIGINT (CTRL-C command)
   struct sigaction sigIntHandler;
   sigIntHandler.sa_handler = sigint_cleanup;
@@ -20,18 +18,19 @@ int main(int argc, char *argv[])
     }
   printf("\n");
 
+  FILE *expData,*simData[NSIMDATA];
   int i,j,k;
   pc_par parameters;
+  fit_par fparameters;
   
   //initialize values
-  parameters.addBackground=0;
   memset(expHist,0,sizeof(expHist));
   memset(fittedExpHist,0,sizeof(fittedExpHist));
   memset(simHist,0,sizeof(simHist));
   memset(fittedSimHist,0,sizeof(fittedSimHist));
   memset(scaledSimHist,0,sizeof(scaledSimHist));
 
-  readConfigFile(argv[1],&parameters); //grab data from the config file
+  readConfigFile(argv[1],&parameters); //grab data from the parameter file
 
   //check that the number of spectra being compared is fine
   if(parameters.endSpectrum>=NSPECT)
@@ -99,14 +98,19 @@ int main(int argc, char *argv[])
     fclose(simData[i]);
   printf("Spectra read in...\n");
 
-  computeBackgroundandScaling(&parameters);//get background coefficients and scaling factors
+  computeBackgroundandScaling(&parameters,&fparameters);//get background coefficients and scaling factors
       
   //scale simulated data
   for (i=0;i<parameters.numSimData;i++)
     for (j=0;j<parameters.numSpectra;j++)
       for (k=0;k<S32K;k++)
-        scaledSimHist[i][parameters.spectrum[j]][k]=scaleFactor[i][parameters.spectrum[j]]*simHist[i][parameters.spectrum[j]][k];
-      
+        scaledSimHist[i][parameters.spectrum[j]][k]=fparameters.scaleFactor[i][parameters.spectrum[j]]*simHist[i][parameters.spectrum[j]][k];
+  //generate background data
+  for (i=0;i<parameters.numSpectra;i++)
+    for (j=0;j<S32K;j++)
+      if(parameters.addBackground==1)
+        bgHist[i][j]=(int)(fparameters.bgA[parameters.spectrum[i]] + fparameters.bgB[parameters.spectrum[i]]*j);
+
   compareSpectra(&parameters);
   
   if(parameters.plotOutput>=1)
@@ -119,82 +123,17 @@ int main(int argc, char *argv[])
 }
 
 
-//function compares spectra and gets chisq and other stats
-void compareSpectra(pc_par * par)
-{
-  //initialize values
-  double chisq=0;
-  double redChisq=0;
-  double spectChisq[NSPECT];
-  double spectRedChisq[NSPECT];
-  int binsSkipped[NSPECT];
-  int numBinsUsed[NSPECT];
-  int sumBinsUsed=0;
-  int sumBinsSkipped=0;
-  double sumSimValue=0;
-  int i,j,k;
-  memset(spectRedChisq,0,sizeof(spectRedChisq));
-  memset(spectChisq,0,sizeof(spectChisq));
-  memset(binsSkipped,0,sizeof(binsSkipped));
-  memset(numBinsUsed,0,sizeof(numBinsUsed));
-  
-  int numFittedParameters = par->numFittedSimData + par->addBackground*2;
-  
-  //compute chisq for data in the spectra
-  for (i=0;i<par->numSpectra;i++)
-      for (j=par->startCh[i];j<=par->endCh[i];j++)
-          if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
-            {
-              //get the sum of all experimental data in the given bin 
-              sumSimValue = bgA[par->spectrum[i]] + bgB[par->spectrum[i]]*j;
-              for (k=0;k<par->numSimData;k++)
-                sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
-              //increment the chisq value
-              spectChisq[i]+=((expHist[par->spectrum[i]][j]-sumSimValue)*(expHist[par->spectrum[i]][j]-sumSimValue))/((double)expHist[par->spectrum[i]][j]);
-            }
-          else
-            binsSkipped[i]++;
-      
-  //print warnings
-  for (i=0;i<par->numSpectra;i++)
-    sumBinsSkipped+=binsSkipped[i];
-  if(sumBinsSkipped>0)
-    {
-      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
-      printf("Bins skipped: %i.\n",sumBinsSkipped);
-    }
-    
-  //compute total chisq and reduced total chisq
-  for (i=0;i<par->numSpectra;i++)
-    {
-      numBinsUsed[i]=(par->endCh[i]-par->startCh[i]+1)-binsSkipped[i];
-      sumBinsUsed+=numBinsUsed[i];
-      chisq+=spectChisq[i]; 
-      spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters-1);
-    }
-  redChisq=chisq/(sumBinsUsed-numFittedParameters-1);
-  
-  //print output
-  printf("\nCOMPARISON DATA\n---------------\n");
-  if(par->numSpectra>1)
-    for (i=0;i<par->numSpectra;i++)
-      printf("spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
-  printf("chisq (total): %f\n",chisq);
-  printf("number of bins (total): %i\n",sumBinsUsed);
-  printf("number of fitted parameters: %i\n",numFittedParameters);
-  printf("reduced chisq (total): %f\n",redChisq);
-  
-}
+
 
 
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
 //chisq=sum_i[(meas_i - A - B*i - scaleFactor_1*sim_1i - scaleFactor_2*sim_2i - ...)^2 / meas_i]
-//addBG=0: no background addition
-void computeBackgroundandScaling(pc_par * par)
+void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
 {
 
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,si_sum[NSIMDATA],i_sum,ii_sum,sum1; //sums needed to construct system of equations
+  double **fittedScaleFactor=allocateArrayD2(NSIMDATA,NSPECT);
   int i,j,k,l;
   lin_eq_type linEq;
   printf("\n");
@@ -285,15 +224,15 @@ void computeBackgroundandScaling(pc_par * par)
           
           if(par->addBackground==0)
             {
-              bgA[par->spectrum[i]]=0.;
-              bgB[par->spectrum[i]]=0.;
+              fpar->bgA[par->spectrum[i]]=0.;
+              fpar->bgB[par->spectrum[i]]=0.;
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j];
             }
           else
             {
-              bgA[par->spectrum[i]]=linEq.solution[0];
-              bgB[par->spectrum[i]]=linEq.solution[1];
+              fpar->bgA[par->spectrum[i]]=linEq.solution[0];
+              fpar->bgB[par->spectrum[i]]=linEq.solution[1];
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j+2];
             }
@@ -311,7 +250,7 @@ void computeBackgroundandScaling(pc_par * par)
       if(par->simDataFixedAmp[i]==0)//data was fit
         {
           for (j=0;j<par->numSpectra;j++)
-            scaleFactor[i][par->spectrum[j]]=fittedScaleFactor[fd][par->spectrum[j]];
+            fpar->scaleFactor[i][par->spectrum[j]]=fittedScaleFactor[fd][par->spectrum[j]];
           fd++;
           ld=i;
         }
@@ -319,16 +258,18 @@ void computeBackgroundandScaling(pc_par * par)
         {
           if(ld>=0)//has a previous dataset been fit?
             for (j=0;j<par->numSpectra;j++)
-              scaleFactor[i][par->spectrum[j]]=par->simDataFixedAmpValue[i]*scaleFactor[ld][par->spectrum[j]];
+              fpar->scaleFactor[i][par->spectrum[j]]=par->simDataFixedAmpValue[i]*fpar->scaleFactor[ld][par->spectrum[j]];
           ld=i;
         }
       else//data wasn't fit
         {
           for (j=0;j<par->numSpectra;j++)
-            scaleFactor[i][par->spectrum[j]]=par->simDataFixedAmpValue[i];
+            fpar->scaleFactor[i][par->spectrum[j]]=par->simDataFixedAmpValue[i];
           ld=i;
         }
     }
+  
+  free(fittedScaleFactor);
   
   //print parameters  
   for (i=0;i<par->numSpectra;i++)
@@ -337,19 +278,87 @@ void computeBackgroundandScaling(pc_par * par)
         printf("Spectrum %i, channel %i to %i - ",par->spectrum[i],par->startCh[i],par->endCh[i]);
         for (j=0;j<par->numSimData;j++)
           if(par->simDataFixedAmp[j]==0)
-            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],scaleFactor[j][par->spectrum[i]]);
+            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
           else
-            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],scaleFactor[j][par->spectrum[i]]);
+            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
       }
     else
       {
-        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],bgA[par->spectrum[i]],bgB[par->spectrum[i]]);
+        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
         for (j=0;j<par->numSimData;j++)
           if(par->simDataFixedAmp[j]==0)
-            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],scaleFactor[j][par->spectrum[i]]);
+            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
           else
-            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],scaleFactor[j][par->spectrum[i]]);
+            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
       }
+
+}
+
+
+//function compares spectra and gets chisq and other stats
+void compareSpectra(pc_par * par)
+{
+  //initialize values
+  double chisq=0;
+  double redChisq=0;
+  double spectChisq[NSPECT];
+  double spectRedChisq[NSPECT];
+  int binsSkipped[NSPECT];
+  int numBinsUsed[NSPECT];
+  int sumBinsUsed=0;
+  int sumBinsSkipped=0;
+  double sumSimValue=0;
+  int i,j,k;
+  memset(spectRedChisq,0,sizeof(spectRedChisq));
+  memset(spectChisq,0,sizeof(spectChisq));
+  memset(binsSkipped,0,sizeof(binsSkipped));
+  memset(numBinsUsed,0,sizeof(numBinsUsed));
+  
+  int numFittedParameters = par->numFittedSimData + par->addBackground*2;
+  
+  //compute chisq for data in the spectra
+  for (i=0;i<par->numSpectra;i++)
+      for (j=par->startCh[i];j<=par->endCh[i];j++)
+          if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
+            {
+              //get the sum of all experimental data in the given bin 
+              sumSimValue = bgHist[i][j];
+              for (k=0;k<par->numSimData;k++)
+                sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
+              //increment the chisq value
+              spectChisq[i]+=((expHist[par->spectrum[i]][j]-sumSimValue)*(expHist[par->spectrum[i]][j]-sumSimValue))/((double)expHist[par->spectrum[i]][j]);
+            }
+          else
+            binsSkipped[i]++;
+      
+  //print warnings
+  for (i=0;i<par->numSpectra;i++)
+    sumBinsSkipped+=binsSkipped[i];
+  if(sumBinsSkipped>0)
+    {
+      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
+      printf("Bins skipped: %i.\n",sumBinsSkipped);
+    }
+    
+  //compute total chisq and reduced total chisq
+  for (i=0;i<par->numSpectra;i++)
+    {
+      numBinsUsed[i]=(par->endCh[i]-par->startCh[i]+1)-binsSkipped[i];
+      sumBinsUsed+=numBinsUsed[i];
+      chisq+=spectChisq[i]; 
+      spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters-1);
+    }
+  redChisq=chisq/(sumBinsUsed-numFittedParameters-1);
+  
+  //print output
+  printf("\nCOMPARISON DATA\n---------------\n");
+  if(par->numSpectra>1)
+    for (i=0;i<par->numSpectra;i++)
+      printf("spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
+  printf("chisq (total): %f\n",chisq);
+  printf("number of bins (total): %i\n",sumBinsUsed);
+  printf("number of fitted parameters: %i\n",numFittedParameters);
+  printf("reduced chisq (total): %f\n",redChisq);
   
 }
 
@@ -360,12 +369,12 @@ void plotSpectra(pc_par * par)
   char str[256];
   int i,j,k;
   
-  //generate plot data
-  double x[par->numSpectra][par->maxNumCh];
-  double yexp[par->numSpectra][par->maxNumCh];
-  double ysim[NSIMDATA][par->numSpectra][par->maxNumCh];
-  double ybackground[par->numSpectra][par->maxNumCh];
-  double ysimsum[par->numSpectra][par->maxNumCh];
+  //allocate arrays to hold plot data
+  double** x=allocateArrayD2(par->numSpectra,par->maxNumCh);
+  double** yexp=allocateArrayD2(par->numSpectra,par->maxNumCh);
+  double*** ysim=allocateArrayD3(NSIMDATA,par->numSpectra,par->maxNumCh);
+  double** ybackground=allocateArrayD2(par->numSpectra,par->maxNumCh);
+  double** ysimsum=allocateArrayD2(par->numSpectra,par->maxNumCh);
   
   for (i=0;i<par->numSpectra;i++)
     for (j=par->startCh[i];j<=par->endCh[i];j++)
@@ -373,7 +382,7 @@ void plotSpectra(pc_par * par)
         x[i][j-par->startCh[i]]=(double)j;
         yexp[i][j-par->startCh[i]]=(double)expHist[par->spectrum[i]][j];
         if(par->addBackground==1)
-          ybackground[i][j-par->startCh[i]]=bgA[par->spectrum[i]] + bgB[par->spectrum[i]]*j;
+          ybackground[i][j-par->startCh[i]]=bgHist[i][j];
         ysimsum[i][j-par->startCh[i]]=ybackground[i][j-par->startCh[i]];
         for (k=0;k<par->numSimData;k++)
           {
@@ -424,6 +433,11 @@ void plotSpectra(pc_par * par)
     }
   gnuplot_close(handle);
   plotOpen=0;
+  free(x);
+  free(yexp);
+  free(ysim);
+  free(ybackground);
+  free(ysimsum);
   
 }
 
@@ -435,9 +449,7 @@ void saveSpectra(pc_par * par)
   char str[256];
   int i,j,k;
   
-  //allocate arrays
-  int ***outHist=allocateArrayI3(par->numSimData,par->numSpectra,S32K);
-  int **bgHist=allocateArrayI2(par->numSpectra,S32K);
+  int ***outHist=allocateArrayI3(par->numSimData,par->numSpectra,S32K); //allocate array
   
   printf("Saving scaled simulation data to output file(s)...\n");
   
@@ -445,8 +457,6 @@ void saveSpectra(pc_par * par)
   for (i=0;i<par->numSpectra;i++)
     for (j=0;j<S32K;j++)
       {
-        if(par->addBackground==1)
-          bgHist[i][j]=(int)(bgA[par->spectrum[i]] + bgB[par->spectrum[i]]*j);
         for (k=0;k<par->numSimData;k++)
           outHist[k][i][j]=(int)(scaledSimHist[k][par->spectrum[i]][j]);
       }
@@ -476,7 +486,6 @@ void saveSpectra(pc_par * par)
       fclose(output);
     }
   free(outHist);
-  free(bgHist);
   
 }
 
