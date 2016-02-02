@@ -69,6 +69,15 @@ void readConfigFile(const char * fileName)
                   else
                     plotOutput=0;
                 }
+              if(strcmp(str1,"PLOT_STYLE")==0)
+                {
+                  if(strcmp(str2,"lin")==0)
+                    plotStyle=0;
+                  else if(strcmp(str2,"log")==0)
+                    plotStyle=1;
+                  else
+                    plotStyle=0;
+                }
               if(strcmp(str1,"SAVE_OUTPUT")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -118,6 +127,9 @@ void readConfigFile(const char * fileName)
     printf("Will plot output data.\n");
   if(plotOutput==2)
     printf("Will plot detailed output data.\n");
+  if(plotOutput>0)
+    if(plotStyle==1)
+      printf("Will plot using logarithmic y-axis.\n");
   if(saveOutput==0)
     printf("Will not save fitted simulation data.\n");
   if(saveOutput==1)

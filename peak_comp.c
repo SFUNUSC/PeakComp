@@ -379,6 +379,8 @@ void plotSpectra()
   printf("\n");
   for(i=0;i<numSpectra;i++)
     {
+      if(plotStyle==1)//log-lin plot
+        gnuplot_cmd(handle,"set logscale y");
       gnuplot_setstyle(handle,"steps");
       gnuplot_cmd(handle,"set xlabel 'Channel'");
       gnuplot_cmd(handle,"set ylabel 'Counts'");
