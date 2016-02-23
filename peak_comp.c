@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
   for (i=0;i<parameters.numSpectra;i++)
     for (j=0;j<S32K;j++)
       if(parameters.addBackground==1)
-        bgHist[i][j]=(int)(fparameters.bgA[parameters.spectrum[i]] + fparameters.bgB[parameters.spectrum[i]]*j);
+        bgHist[i][j]=fparameters.bgA[parameters.spectrum[i]] + fparameters.bgB[parameters.spectrum[i]]*j;
 
   compareSpectra(&parameters);
   
@@ -335,10 +335,7 @@ void compareSpectra(pc_par * par)
   for (i=0;i<par->numSpectra;i++)
     sumBinsSkipped+=binsSkipped[i];
   if(sumBinsSkipped>0)
-    {
-      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.\n");
-      printf("Bins skipped: %i.\n",sumBinsSkipped);
-    }
+      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n",sumBinsSkipped);
     
   //compute total chisq and reduced total chisq
   for (i=0;i<par->numSpectra;i++)
