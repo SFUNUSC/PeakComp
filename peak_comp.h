@@ -18,8 +18,10 @@
 typedef struct
 {
   int spectrum[NSPECT];//spectrum indices in the .mca file(s) to compare
-  int startCh[NSPECT],endCh[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
-  int addBackground;//0=no,1=constant background
+  int startCh[NSPECT],endCh[NSPECT],fixBG[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
+  double fixedBGPar[NSPECT][3];
+  int addBackground;//0=no,1=lin background,2=quadratic background
+  int fitAddBackground[NSPECT];
   int peakSearch;//0=no,1=yes
   int plotOutput;//0=no,1=yes,2=detailed
   int plotStyle;//0=lin-lin, 1=log-lin

@@ -62,6 +62,17 @@ int main(int argc, char *argv[])
       for (j=0;j<S32K;j++)
         fittedExpHist[i][j]=expHist[i][j];
     }
+  //generate data for fitting
+  for (i=0;i<parameters.numSpectra;i++)
+    {
+      if(parameters.fixBG[i]==0)
+        for (j=0;j<S32K;j++)
+          fittedExpHist[parameters.spectrum[i]][j]=expHist[parameters.spectrum[i]][j];
+      else
+        for (j=0;j<S32K;j++)
+          fittedExpHist[parameters.spectrum[i]][j]=expHist[parameters.spectrum[i]][j] - parameters.fixedBGPar[i][0] - parameters.fixedBGPar[i][1]*j - parameters.fixedBGPar[i][2]*j*j;
+    }
+    
   int fi=0;//index for simulated data to be fitted
   for (i=0;i<parameters.numSimData;i++)
     {
@@ -73,6 +84,7 @@ int main(int argc, char *argv[])
             printf("Verify that the format and number of spectra in the file are correct.\n");
             exit(-1);
           }
+          
       //determine whether simulated data is fitted and read into histograms for fitting as needed
       if(parameters.simDataFixedAmp[i]==0)
         {
@@ -101,7 +113,7 @@ int main(int argc, char *argv[])
   //find peaks and shift fitting windows if requested
   if(parameters.peakSearch==1)
     {
-      printf("\n");
+      printf("\nPEAK FINDER\n-----------\n");
       peak_search_par pspar;
       for (i=0;i<parameters.numSpectra;i++)
         {
@@ -109,11 +121,12 @@ int main(int argc, char *argv[])
           pspar.searchMax=parameters.endCh[i];
           pspar.windowSize=(int)(pspar.searchMax-pspar.searchMin)/10;
           peak_fit_par pfpar = findPeak(&pspar, expHist[parameters.spectrum[i]], S32K);
-          printf("Spectrum %i: peak found with centroid %f\n",i,pfpar.centroid);
+          printf("Spectrum %i: peak found with centroid at channel %i.\n",i,(int)pfpar.centroid);
           int range=abs(pspar.searchMax-pspar.searchMin);
           parameters.startCh[i]=pfpar.centroid-(int)(range/2);
           parameters.endCh[i]=pfpar.centroid+(int)(range/2);
         }
+      printf("Fit window(s) centered on peak(s)...\n");
     }
 
   computeBackgroundandScaling(&parameters,&fparameters);//get background coefficients and scaling factors
@@ -187,7 +200,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
                       ss_sum[k][l]+=fittedSimHist[k][par->spectrum[i]][j]*fittedSimHist[l][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
                   }
               }
-          if(par->addBackground>=1)
+          if(par->fitAddBackground[i]>=1)
             for (j=par->startCh[i];j<=par->endCh[i];j++)
               if(expHist[par->spectrum[i]][j]!=0)
                 {
@@ -203,7 +216,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
                       si_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*ind/((double)expHist[par->spectrum[i]][j]);
                     }
                 }
-          if(par->addBackground>=2)
+          if(par->fitAddBackground[i]>=2)
             for (j=par->startCh[i];j<=par->endCh[i];j++)
               if(expHist[par->spectrum[i]][j]!=0)
                 {
@@ -216,7 +229,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
                 }
           
           //construct system of equations (matrix/vector entries) 
-          if(par->addBackground==0)
+          if(par->fitAddBackground[i]==0)
             {
               linEq.dim=par->numFittedSimData;
               for (j=0;j<par->numFittedSimData;j++)
@@ -225,7 +238,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               for (j=0;j<par->numFittedSimData;j++)
                 linEq.vector[j]=ms_sum[j];
             }
-          else if(par->addBackground==1)
+          else if(par->fitAddBackground[i]==1)
             {
               linEq.dim=par->numFittedSimData+2;
               
@@ -254,7 +267,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               for (j=0;j<par->numFittedSimData;j++)
                 linEq.vector[j+2]=ms_sum[j];
             }
-          else if(par->addBackground==2)
+          else if(par->fitAddBackground[i]==2)
             {
               linEq.dim=par->numFittedSimData+3;
               
@@ -302,7 +315,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               exit(-1);
             }
           
-          if(par->addBackground==0)
+          if(par->fitAddBackground[i]==0)
             {
               fpar->bgA[par->spectrum[i]]=0.;
               fpar->bgB[par->spectrum[i]]=0.;
@@ -310,7 +323,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j];
             }
-          else if(par->addBackground==1)
+          else if(par->fitAddBackground[i]==1)
             {
               fpar->bgA[par->spectrum[i]]=linEq.solution[0];
               fpar->bgB[par->spectrum[i]]=linEq.solution[1];
@@ -318,7 +331,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j+2];
             }
-          else if(par->addBackground==2)
+          else if(par->fitAddBackground[i]==2)
             {
               fpar->bgA[par->spectrum[i]]=linEq.solution[0];
               fpar->bgB[par->spectrum[i]]=linEq.solution[1];
@@ -330,7 +343,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
         }
     }
   else
-    printf("NOTE: All parameters are fixed, no chisq minimzation was performed.\n");
+    printf("NOTE: All scaling parameters are fixed, no chisq minimzation was performed.\n\n");
     
   //generate scaling factors for all spectra, including those that weren't fitted
   int fd=0;//counter for number of datasets which have fit (not fixed amplitude)
@@ -358,23 +371,43 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
           ld=i;
         }
     }
+  //check for fixed background and generate background parameters if needed
+  for (i=0;i<par->numSimData;i++)
+    if(par->fixBG[i]==1)
+      {
+        if(par->addBackground>=1)
+          {
+            fpar->bgA[par->spectrum[i]]=par->fixedBGPar[i][0];
+            fpar->bgB[par->spectrum[i]]=par->fixedBGPar[i][1];
+          }
+        if(par->addBackground>=2)
+          {
+            fpar->bgC[par->spectrum[i]]=par->fixedBGPar[i][2];
+          }
+      }
   
   free(fittedScaleFactor);
   
-  //print parameters  
+  //print fit data
+  printf("FIT DATA\n--------\n");
   for (i=0;i<par->numSpectra;i++)
     {
       if(par->addBackground==0)
-        printf("Spectrum %i, channel %i to %i - ",par->spectrum[i],par->startCh[i],par->endCh[i]);
+        printf("Spectrum %i, channel %i to %i:\n",par->spectrum[i],par->startCh[i],par->endCh[i]);
+      else if((par->addBackground==1)&&(par->fitAddBackground[i]==par->addBackground))
+        printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
       else if(par->addBackground==1)
-        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
+        printf("Spectrum %i, channel %i to %i:\nUsing linear background of form [A + B*channel],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
+      else if((par->addBackground==2)&&(par->fitAddBackground[i]==par->addBackground))
+        printf("Spectrum %i, channel %i to %i:\nFit quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE, B = %0.5LE, C = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
       else if(par->addBackground==2)
-        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel + B*(channel^2)], A = %0.3Lf, B = %0.3Lf, C = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
+        printf("Spectrum %i, channel %i to %i:\nUsing quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED], C = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
       for (j=0;j<par->numSimData;j++)
         if(par->simDataFixedAmp[j]==0)
           printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
         else
           printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
+      printf("\n");
     }
 
 }
@@ -384,6 +417,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
 void compareSpectra(pc_par * par)
 {
   //initialize values
+  int numFittedParameters[NSPECT],sumFittedParameters;
   double chisq=0;
   double redChisq=0;
   double spectChisq[NSPECT];
@@ -399,30 +433,35 @@ void compareSpectra(pc_par * par)
   memset(binsSkipped,0,sizeof(binsSkipped));
   memset(numBinsUsed,0,sizeof(numBinsUsed));
   
-  int numFittedParameters = par->numFittedSimData;
-  if(par->addBackground>=1)
-    numFittedParameters += par->addBackground + 1;
+  sumFittedParameters=0;
+  for (i=0;i<par->numSpectra;i++)
+    {
+      numFittedParameters[i] = par->numFittedSimData;
+      if(par->fixBG[i]==0)
+        if(par->addBackground>=1)
+          numFittedParameters[i] += par->addBackground + 1;
+      sumFittedParameters+=numFittedParameters[i];
+    }
   
   //compute chisq for data in the spectra
   for (i=0;i<par->numSpectra;i++)
-      for (j=par->startCh[i];j<=par->endCh[i];j++)
-          if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
-            {
-              //get the sum of all simulated data in the given bin 
-              sumSimValue = bgHist[i][j];
-              for (k=0;k<par->numSimData;k++)
-                sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
-              //increment the chisq value
-              spectChisq[i]+=((expHist[par->spectrum[i]][j]-sumSimValue)*(expHist[par->spectrum[i]][j]-sumSimValue))/((double)expHist[par->spectrum[i]][j]);
-            }
-          else
-            binsSkipped[i]++;
-      
-  //print warnings
+    for (j=par->startCh[i];j<=par->endCh[i];j++)
+      if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
+        {
+          //get the sum of all simulated data in the given bin 
+          sumSimValue = bgHist[i][j];
+          for (k=0;k<par->numSimData;k++)
+            sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
+          //increment the chisq value
+          spectChisq[i]+=((expHist[par->spectrum[i]][j]-sumSimValue)*(expHist[par->spectrum[i]][j]-sumSimValue))/((double)expHist[par->spectrum[i]][j]);
+        }
+      else
+        binsSkipped[i]++;
+  
   for (i=0;i<par->numSpectra;i++)
     sumBinsSkipped+=binsSkipped[i];
   if(sumBinsSkipped>0)
-      printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n",sumBinsSkipped);
+    printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n",sumBinsSkipped);
     
   //compute total chisq and reduced total chisq
   for (i=0;i<par->numSpectra;i++)
@@ -430,19 +469,19 @@ void compareSpectra(pc_par * par)
       numBinsUsed[i]=(par->endCh[i]-par->startCh[i]+1)-binsSkipped[i];
       sumBinsUsed+=numBinsUsed[i];
       chisq+=spectChisq[i];
-      spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters-1);
+      spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters[i]-1);
     }
-  redChisq=chisq/(sumBinsUsed-numFittedParameters-1);
+  redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
   
   //print output
-  printf("\nCOMPARISON DATA\n---------------\n");
+  printf("COMPARISON DATA\n---------------\n");
   if(par->numSpectra>1)
     for (i=0;i<par->numSpectra;i++)
-      printf("spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
-  printf("chisq (total): %f\n",chisq);
-  printf("number of bins (total): %i\n",sumBinsUsed);
-  printf("number of fitted parameters: %i\n",numFittedParameters);
-  printf("reduced chisq (total): %f\n",redChisq);
+      printf("Spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
+  printf("Chisq (total): %f\n",chisq);
+  printf("Number of bins (total): %i\n",sumBinsUsed);
+  printf("Number of fitted parameters (total): %i\n",sumFittedParameters);
+  printf("Reduced chisq (total): %f\n",redChisq);
   
 }
 
