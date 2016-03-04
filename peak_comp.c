@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   memset(scaledSimHist,0,sizeof(scaledSimHist));
 
   readConfigFile(argv[1],&parameters); //grab data from the parameter file
-
+  
   //check that the number of spectra being compared is fine
   if(parameters.endSpectrum>=NSPECT)
     {
@@ -98,6 +98,24 @@ int main(int argc, char *argv[])
     fclose(simData[i]);
   printf("Spectra read in...\n");
 
+  //find peaks and shift fitting windows if requested
+  if(parameters.peakSearch==1)
+    {
+      printf("\n");
+      peak_search_par pspar;
+      for (i=0;i<parameters.numSpectra;i++)
+        {
+          pspar.searchMin=parameters.startCh[i];
+          pspar.searchMax=parameters.endCh[i];
+          pspar.windowSize=(int)(pspar.searchMax-pspar.searchMin)/10;
+          peak_fit_par pfpar = findPeak(&pspar, expHist[parameters.spectrum[i]], S32K);
+          printf("Spectrum %i: peak found with centroid %f\n",i,pfpar.centroid);
+          int range=abs(pspar.searchMax-pspar.searchMin);
+          parameters.startCh[i]=pfpar.centroid-(int)(range/2);
+          parameters.endCh[i]=pfpar.centroid+(int)(range/2);
+        }
+    }
+
   computeBackgroundandScaling(&parameters,&fparameters);//get background coefficients and scaling factors
       
   //scale simulated data
@@ -108,8 +126,8 @@ int main(int argc, char *argv[])
   //generate background data
   for (i=0;i<parameters.numSpectra;i++)
     for (j=0;j<S32K;j++)
-      if(parameters.addBackground==1)
-        bgHist[i][j]=fparameters.bgA[parameters.spectrum[i]] + fparameters.bgB[parameters.spectrum[i]]*j;
+      if(parameters.addBackground>=1)
+        bgHist[i][j]=fparameters.bgA[parameters.spectrum[i]] + fparameters.bgB[parameters.spectrum[i]]*j + fparameters.bgC[parameters.spectrum[i]]*j*j;
 
   compareSpectra(&parameters);
   
@@ -132,7 +150,8 @@ int main(int argc, char *argv[])
 void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
 {
 
-  long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,si_sum[NSIMDATA],i_sum,ii_sum,sum1; //sums needed to construct system of equations
+  long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,iii_sum,iiii_sum,sum1; //sums needed to construct system of equations
+  long double ind;
   double **fittedScaleFactor=allocateArrayD2(NSIMDATA,NSPECT);
   int i,j,k,l;
   lin_eq_type linEq;
@@ -145,32 +164,56 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
           //initialize all sums to 0
           m_sum=0.;
           mi_sum=0.;
+          mii_sum=0.;
           i_sum=0.;
           ii_sum=0.;
+          iii_sum=0.;
+          iiii_sum=0.;
           sum1=0.;
           memset(s_sum,0,sizeof(s_sum));
           memset(ms_sum,0,sizeof(ms_sum));
           memset(si_sum,0,sizeof(si_sum));
+          memset(sii_sum,0,sizeof(sii_sum));
           memset(ss_sum,0,sizeof(ss_sum));
           
-          //construct sums  
+          //construct sums
           for (j=par->startCh[i];j<=par->endCh[i];j++)
             if(expHist[par->spectrum[i]][j]!=0)
               {
-                m_sum+=fittedExpHist[par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
-                mi_sum+=fittedExpHist[par->spectrum[i]][j]*j/((double)expHist[par->spectrum[i]][j]);
-                i_sum+=j/((double)expHist[par->spectrum[i]][j]);
-                ii_sum+=j*j/((double)expHist[par->spectrum[i]][j]);
-                sum1+=1./((double)expHist[par->spectrum[i]][j]);
                 for (k=0;k<par->numFittedSimData;k++)
                   {
-                    s_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
                     ms_sum[k]+=fittedExpHist[par->spectrum[i]][j]*fittedSimHist[k][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
-                    si_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*j/((double)expHist[par->spectrum[i]][j]);
                     for (l=0;l<par->numFittedSimData;l++)
                       ss_sum[k][l]+=fittedSimHist[k][par->spectrum[i]][j]*fittedSimHist[l][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
                   }
               }
+          if(par->addBackground>=1)
+            for (j=par->startCh[i];j<=par->endCh[i];j++)
+              if(expHist[par->spectrum[i]][j]!=0)
+                {
+                  ind=(long double)j;
+                  m_sum+=fittedExpHist[par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
+                  mi_sum+=fittedExpHist[par->spectrum[i]][j]*ind/((double)expHist[par->spectrum[i]][j]);
+                  i_sum+=ind/((double)expHist[par->spectrum[i]][j]);
+                  ii_sum+=ind*ind/((double)expHist[par->spectrum[i]][j]);
+                  sum1+=1./((double)expHist[par->spectrum[i]][j]);
+                  for (k=0;k<par->numFittedSimData;k++)
+                    {
+                      s_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
+                      si_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*ind/((double)expHist[par->spectrum[i]][j]);
+                    }
+                }
+          if(par->addBackground>=2)
+            for (j=par->startCh[i];j<=par->endCh[i];j++)
+              if(expHist[par->spectrum[i]][j]!=0)
+                {
+                  ind=(long double)j;
+                  mii_sum+=fittedExpHist[par->spectrum[i]][j]*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                  iii_sum+=ind*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                  iiii_sum+=ind*ind*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                  for (k=0;k<par->numFittedSimData;k++)
+                    sii_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                }
           
           //construct system of equations (matrix/vector entries) 
           if(par->addBackground==0)
@@ -182,7 +225,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               for (j=0;j<par->numFittedSimData;j++)
                 linEq.vector[j]=ms_sum[j];
             }
-          else
+          else if(par->addBackground==1)
             {
               linEq.dim=par->numFittedSimData+2;
               
@@ -195,7 +238,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               //regular simulated data entires (bottom-right)
               for (j=0;j<par->numFittedSimData;j++)
                 for (k=0;k<par->numFittedSimData;k++)
-                  linEq.matrix[j+2][k+2]=ss_sum[j][k];
+                  linEq.matrix[2+j][2+k]=ss_sum[j][k];
               
               //remaining entires
               for (j=0;j<par->numFittedSimData;j++)
@@ -210,6 +253,43 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
               linEq.vector[1]=mi_sum;
               for (j=0;j<par->numFittedSimData;j++)
                 linEq.vector[j+2]=ms_sum[j];
+            }
+          else if(par->addBackground==2)
+            {
+              linEq.dim=par->numFittedSimData+3;
+              
+              //top-left 9 entries
+              linEq.matrix[0][0]=sum1;
+              linEq.matrix[0][1]=i_sum;
+              linEq.matrix[0][2]=ii_sum;
+              linEq.matrix[1][0]=i_sum;
+              linEq.matrix[1][1]=ii_sum;
+              linEq.matrix[1][2]=iii_sum;
+              linEq.matrix[2][0]=ii_sum;
+              linEq.matrix[2][1]=iii_sum;
+              linEq.matrix[2][2]=iiii_sum;
+              
+              //regular simulated data entires (bottom-right)
+              for (j=0;j<par->numFittedSimData;j++)
+                for (k=0;k<par->numFittedSimData;k++)
+                  linEq.matrix[3+j][3+k]=ss_sum[j][k];
+              
+              //remaining entires
+              for (j=0;j<par->numFittedSimData;j++)
+                {     
+                  linEq.matrix[0][3+j]=s_sum[j];
+                  linEq.matrix[1][3+j]=si_sum[j];
+                  linEq.matrix[2][3+j]=sii_sum[j];
+                  linEq.matrix[3+j][0]=s_sum[j];
+                  linEq.matrix[3+j][1]=si_sum[j];
+                  linEq.matrix[3+j][2]=sii_sum[j];
+                }
+              
+              linEq.vector[0]=m_sum;
+              linEq.vector[1]=mi_sum;
+              linEq.vector[2]=mii_sum;
+              for (j=0;j<par->numFittedSimData;j++)
+                linEq.vector[j+3]=ms_sum[j];
             }
           
           //solve system of equations and assign values
@@ -226,15 +306,25 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
             {
               fpar->bgA[par->spectrum[i]]=0.;
               fpar->bgB[par->spectrum[i]]=0.;
+              fpar->bgC[par->spectrum[i]]=0.;
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j];
             }
-          else
+          else if(par->addBackground==1)
             {
               fpar->bgA[par->spectrum[i]]=linEq.solution[0];
               fpar->bgB[par->spectrum[i]]=linEq.solution[1];
+              fpar->bgC[par->spectrum[i]]=0.;
               for (j=0;j<par->numFittedSimData;j++)
                 fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j+2];
+            }
+          else if(par->addBackground==2)
+            {
+              fpar->bgA[par->spectrum[i]]=linEq.solution[0];
+              fpar->bgB[par->spectrum[i]]=linEq.solution[1];
+              fpar->bgC[par->spectrum[i]]=linEq.solution[2];
+              for (j=0;j<par->numFittedSimData;j++)
+                fittedScaleFactor[j][par->spectrum[i]]=linEq.solution[j+3];
             }
 
         }
@@ -273,24 +363,19 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
   
   //print parameters  
   for (i=0;i<par->numSpectra;i++)
-    if(par->addBackground==0)
-      {
+    {
+      if(par->addBackground==0)
         printf("Spectrum %i, channel %i to %i - ",par->spectrum[i],par->startCh[i],par->endCh[i]);
-        for (j=0;j<par->numSimData;j++)
-          if(par->simDataFixedAmp[j]==0)
-            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-          else
-            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-      }
-    else
-      {
+      else if(par->addBackground==1)
         printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel], A = %0.3Lf, B = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
-        for (j=0;j<par->numSimData;j++)
-          if(par->simDataFixedAmp[j]==0)
-            printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-          else
-            printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-      }
+      else if(par->addBackground==2)
+        printf("Spectrum %i, channel %i to %i - fit linear background of form [A + B*channel + B*(channel^2)], A = %0.3Lf, B = %0.3Lf, C = %0.3Lf\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
+      for (j=0;j<par->numSimData;j++)
+        if(par->simDataFixedAmp[j]==0)
+          printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
+        else
+          printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
+    }
 
 }
 
@@ -314,14 +399,16 @@ void compareSpectra(pc_par * par)
   memset(binsSkipped,0,sizeof(binsSkipped));
   memset(numBinsUsed,0,sizeof(numBinsUsed));
   
-  int numFittedParameters = par->numFittedSimData + par->addBackground*2;
+  int numFittedParameters = par->numFittedSimData;
+  if(par->addBackground>=1)
+    numFittedParameters += par->addBackground + 1;
   
   //compute chisq for data in the spectra
   for (i=0;i<par->numSpectra;i++)
       for (j=par->startCh[i];j<=par->endCh[i];j++)
           if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
             {
-              //get the sum of all experimental data in the given bin 
+              //get the sum of all simulated data in the given bin 
               sumSimValue = bgHist[i][j];
               for (k=0;k<par->numSimData;k++)
                 sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
@@ -342,7 +429,7 @@ void compareSpectra(pc_par * par)
     {
       numBinsUsed[i]=(par->endCh[i]-par->startCh[i]+1)-binsSkipped[i];
       sumBinsUsed+=numBinsUsed[i];
-      chisq+=spectChisq[i]; 
+      chisq+=spectChisq[i];
       spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters-1);
     }
   redChisq=chisq/(sumBinsUsed-numFittedParameters-1);
@@ -378,7 +465,7 @@ void plotSpectra(pc_par * par)
       {
         x[i][j-par->startCh[i]]=(double)j;
         yexp[i][j-par->startCh[i]]=(double)expHist[par->spectrum[i]][j];
-        if(par->addBackground==1)
+        if(par->addBackground>=1)
           ybackground[i][j-par->startCh[i]]=bgHist[i][j];
         ysimsum[i][j-par->startCh[i]]=ybackground[i][j-par->startCh[i]];
         for (k=0;k<par->numSimData;k++)
@@ -401,7 +488,7 @@ void plotSpectra(pc_par * par)
       gnuplot_plot_xy(handle, x[i], yexp[i], par->endCh[i]-par->startCh[i]+1, "Experiment");
       if(par->plotOutput>1)//detailed plot
         {
-          if(par->addBackground==1)//plot background
+          if(par->addBackground>=1)//plot background
             {
               gnuplot_setstyle(handle,"lines"); //plot background as a line
               gnuplot_plot_xy(handle, x[i], ybackground[i], par->endCh[i]-par->startCh[i]+1, "Background");
@@ -412,7 +499,7 @@ void plotSpectra(pc_par * par)
               sprintf(str,"Simulation (%s)",par->simDataName[j]);
               gnuplot_plot_xy(handle, x[i], ysim[j][i], par->endCh[i]-par->startCh[i]+1, str);
             }
-          if((par->numSimData>1)||(par->addBackground==1))//plot sum
+          if((par->numSimData>1)||(par->addBackground>=1))//plot sum
             {
               gnuplot_setcolor(handle, "black");
               gnuplot_plot_xy(handle, x[i], ysimsum[i], par->endCh[i]-par->startCh[i]+1, "Simulation and Background(sum)");
@@ -459,7 +546,7 @@ void saveSpectra(pc_par * par)
       }
 
   //save arrays to .mca files  
-  if(par->addBackground==1)
+  if(par->addBackground>=1)
     {
       if((output=fopen("fit_background.mca","w"))==NULL)
         {

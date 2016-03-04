@@ -5,7 +5,7 @@ Jonathan Williams
 A code for comparing peak shapes across simulated and experimental data in .mca files.  Useful for analysis of DSAM/RDM data.
 
 A linear scaling factor will be added to the simulated data, with parameters chosen by analytically minimizing the weighted chisq goodness of fit statistic between experiment and simulation.  Multiple simulated datasets may be specified, and in this case the chisq of the sum of the datasets after scaling them individually will be minimized.  Scaling factors for a given simulated dataset may be fixed to an absolute value or a value relative to another simulated dataset's scaling factor.
-If background addition is enabled in the parameter file, a linear background of form [A + B*channel] will also be added and taken into account during the chisq minimization procedure.
+If background addition is enabled in the parameter file, a linear or quadratic background (depending on parameter choice) will also be added and taken into account during the chisq minimization procedure.
 
 For a detailed example and description of how to specify parameters, see the 'sample_parameters' file.
 

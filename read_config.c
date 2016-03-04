@@ -55,10 +55,19 @@ void readConfigFile(const char * fileName, pc_par * par)
                 strcpy(par->expDataName,str2);
               if(strcmp(str1,"ADD_BACKGROUND")==0)
                 {
-                  if(strcmp(str2,"yes")==0)
+                  if(strcmp(str2,"quad")==0)
+                    par->addBackground=2;
+                  else if((strcmp(str2,"yes")==0)||(strcmp(str2,"lin")==0))
                     par->addBackground=1;
                   else
                     par->addBackground=0;
+                }
+              if(strcmp(str1,"PEAK_SEARCH")==0)
+                {
+                  if(strcmp(str2,"yes")==0)
+                    par->peakSearch=1;
+                  else
+                    par->peakSearch=0;
                 }
               if(strcmp(str1,"PLOT_OUTPUT")==0)
                 {
@@ -115,12 +124,18 @@ void readConfigFile(const char * fileName, pc_par * par)
       if(par->simDataFixedAmp[index]==2)
         printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",par->simDataFixedAmpValue[index]);
     }
-  for(index=0;index<par->numSpectra;index++)
-    printf("Will compare spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
+  if(par->peakSearch==0)
+    for(index=0;index<par->numSpectra;index++)
+      printf("Will compare spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
+  else
+    for(index=0;index<par->numSpectra;index++)
+      printf("Will search for a peak in spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
   if(par->addBackground==0)
     printf("Will not add background to simulated data.\n");
   if(par->addBackground==1)
     printf("Will add a linear background to simulated data.\n");
+  if(par->addBackground==2)
+    printf("Will add a quadratic background to simulated data.\n");
   if(par->plotOutput==0)
     printf("Will not plot output data.\n");
   if(par->plotOutput==1)

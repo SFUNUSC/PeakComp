@@ -1,5 +1,6 @@
 EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
-ADD_BACKGROUND              yes
+ADD_BACKGROUND              quad
+PEAK_SEARCH                 no
 PLOT_OUTPUT                 yes
 PLOT_STYLE                  lin
 SAVE_OUTPUT                 yes
@@ -25,7 +26,12 @@ Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
-yes: Add a linear background to the simulated data.
+lin: Add a linear background to the simulated data.
+quad: Add a quadratic/parabolic background to the simulated data.
+
+PEAK_SEARCH
+no: Data will be fit over the specified channel range.
+yes: The program will search for a peak in the experiment data over the specified channel range, and shift the fit channel range to be centered on that peak.
 
 PLOT_OUTPUT
 no: Show chisq stats only.
@@ -49,4 +55,4 @@ yes: The specified data will be scaled by the value specified under SCALING_VALU
 rel: The specified data will be scaled by the value specified under SCALING_VALUE, relative to the scaling factor of the previous dataset (if there is no previous dataset, the scaling will be set to 0).
 
 SPECTRUM  START_CHANNEL END_CHANNEL
-Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
+Contains a list of the simulated spectra to analyze against the experiment data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
