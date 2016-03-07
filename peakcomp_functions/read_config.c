@@ -1,5 +1,4 @@
-#include "peak_comp.h"
-#include <string.h>
+#include "peakcomp_functions.h"
 
 void readConfigFile(const char * fileName, pc_par * par) 
 {
