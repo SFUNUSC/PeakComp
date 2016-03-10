@@ -1,9 +1,9 @@
 CFLAGS   = -I./peakcomp_functions -I./gnuplot_i -I./lin_eq_solver -I./utils -o2 -Wall
 
-all: gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o peakcomp_functions.o peak_comp
+all: gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o peakcomp_functions.o topspek
 
-peak_comp: peak_comp.c peak_comp.h peak_find.o peakcomp_functions.o
-	gcc peak_comp.c $(CFLAGS) -o peak_comp gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o peakcomp_functions.o
+topspek: peak_comp.c peak_comp.h peak_find.o peakcomp_functions.o
+	gcc peak_comp.c $(CFLAGS) -o topspek gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o peakcomp_functions.o
 	
 gnuplot_i.o: gnuplot_i/gnuplot_i.c gnuplot_i/gnuplot_i.h
 	gcc -I./gnuplot_i -o2 -c -o gnuplot_i.o gnuplot_i/gnuplot_i.c

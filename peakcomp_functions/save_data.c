@@ -1,7 +1,7 @@
 #include "peakcomp_functions.h"
 
 //function handles saving of fitted data
-void saveSpectra(pc_par * par)
+void saveSpectra(pc_par * par, fitteddata * fdata)
 {
   FILE *output;
   char str[256];
@@ -16,7 +16,7 @@ void saveSpectra(pc_par * par)
     for (j=0;j<S32K;j++)
       {
         for (k=0;k<par->numSimData;k++)
-          outHist[k][i][j]=(int)(scaledSimHist[k][par->spectrum[i]][j]);
+          outHist[k][i][j]=(int)(fdata->scaledSimHist[k][par->spectrum[i]][j]);
       }
 
   //save arrays to .mca files  
@@ -28,7 +28,7 @@ void saveSpectra(pc_par * par)
           exit(-1);
         }
       for (i=0;i<par->numSpectra;i++)
-        fwrite(bgHist[i],S32K*sizeof(int),1,output);
+        fwrite(fdata->bgHist[i],S32K*sizeof(int),1,output);
       fclose(output);
     }
   for (i=0;i<par->numSimData;i++)

@@ -3,7 +3,7 @@
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
 //chisq=sum_i[(meas_i - A - B*i - scaleFactor_1*sim_1i - scaleFactor_2*sim_2i - ...)^2 / meas_i]
-void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
+void computeBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data)
 {
 
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,iii_sum,iiii_sum,sum1; //sums needed to construct system of equations
@@ -32,43 +32,44 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
           memset(sii_sum,0,sizeof(sii_sum));
           memset(ss_sum,0,sizeof(ss_sum));
           
+          
           //construct sums
           for (j=par->startCh[i];j<=par->endCh[i];j++)
-            if(expHist[par->spectrum[i]][j]!=0)
+            if(data->expHist[par->spectrum[i]][j]!=0)
               {
-                m_sum+=fittedExpHist[par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
+                m_sum+=data->fittedExpHist[par->spectrum[i]][j]/((double)data->expHist[par->spectrum[i]][j]);
                 for (k=0;k<par->numFittedSimData;k++)
                   {
-                    ms_sum[k]+=(double)fittedExpHist[par->spectrum[i]][j]*(double)fittedSimHist[k][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);//cast to double needed to prevent overflow
+                    ms_sum[k]+=data->fittedExpHist[par->spectrum[i]][j]*(double)data->fittedSimHist[k][par->spectrum[i]][j]/((double)data->expHist[par->spectrum[i]][j]);//cast to double in numerator needed to prevent overflow
                     for (l=0;l<par->numFittedSimData;l++)
-                      ss_sum[k][l]+=(double)fittedSimHist[k][par->spectrum[i]][j]*(double)fittedSimHist[l][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
+                      ss_sum[k][l]+=(double)data->fittedSimHist[k][par->spectrum[i]][j]*(double)data->fittedSimHist[l][par->spectrum[i]][j]/((double)data->expHist[par->spectrum[i]][j]);
                   }
               }
           if(par->fitAddBackground[i]>=1)
             for (j=par->startCh[i];j<=par->endCh[i];j++)
-              if(expHist[par->spectrum[i]][j]!=0)
+              if(data->expHist[par->spectrum[i]][j]!=0)
                 {
                   ind=(long double)j;  
-                  mi_sum+=fittedExpHist[par->spectrum[i]][j]*ind/((double)expHist[par->spectrum[i]][j]);
-                  i_sum+=ind/((double)expHist[par->spectrum[i]][j]);
-                  ii_sum+=ind*ind/((double)expHist[par->spectrum[i]][j]);
-                  sum1+=1./((double)expHist[par->spectrum[i]][j]);
+                  mi_sum+=data->fittedExpHist[par->spectrum[i]][j]*ind/((double)data->expHist[par->spectrum[i]][j]);
+                  i_sum+=ind/((double)data->expHist[par->spectrum[i]][j]);
+                  ii_sum+=ind*ind/((double)data->expHist[par->spectrum[i]][j]);
+                  sum1+=1./((double)data->expHist[par->spectrum[i]][j]);
                   for (k=0;k<par->numFittedSimData;k++)
                     {
-                      s_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]/((double)expHist[par->spectrum[i]][j]);
-                      si_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*ind/((double)expHist[par->spectrum[i]][j]);
+                      s_sum[k]+=data->fittedSimHist[k][par->spectrum[i]][j]/((double)data->expHist[par->spectrum[i]][j]);
+                      si_sum[k]+=data->fittedSimHist[k][par->spectrum[i]][j]*ind/((double)data->expHist[par->spectrum[i]][j]);
                     }
                 }
           if(par->fitAddBackground[i]>=2)
             for (j=par->startCh[i];j<=par->endCh[i];j++)
-              if(expHist[par->spectrum[i]][j]!=0)
+              if(data->expHist[par->spectrum[i]][j]!=0)
                 {
                   ind=(long double)j;
-                  mii_sum+=fittedExpHist[par->spectrum[i]][j]*ind*ind/((double)expHist[par->spectrum[i]][j]);
-                  iii_sum+=ind*ind*ind/((double)expHist[par->spectrum[i]][j]);
-                  iiii_sum+=ind*ind*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                  mii_sum+=data->fittedExpHist[par->spectrum[i]][j]*ind*ind/((double)data->expHist[par->spectrum[i]][j]);
+                  iii_sum+=ind*ind*ind/((double)data->expHist[par->spectrum[i]][j]);
+                  iiii_sum+=ind*ind*ind*ind/((double)data->expHist[par->spectrum[i]][j]);
                   for (k=0;k<par->numFittedSimData;k++)
-                    sii_sum[k]+=fittedSimHist[k][par->spectrum[i]][j]*ind*ind/((double)expHist[par->spectrum[i]][j]);
+                    sii_sum[k]+=data->fittedSimHist[k][par->spectrum[i]][j]*ind*ind/((double)data->expHist[par->spectrum[i]][j]);
                 }
           
           //construct system of equations (matrix/vector entries) 
@@ -152,9 +153,9 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
           if(!(solve_lin_eq(&linEq)==1))
             {
               if(m_sum==0)
-                printf("ERROR: Experiment data (spectrum %i) has no entries in the specified fitting region!\n",par->spectrum[i]);
+                printf("ERROR: Experiment data has no entries in the specified fitting region (spectrum %i, channel %i to %i).\n",par->spectrum[i],par->startCh[i],par->endCh[i]);
               else
-                printf("ERROR: Could not determine background and scaling parameters!\n");
+                printf("ERROR: Could not determine background and scaling parameters for spectrum %i, channel %i to %i.\n",par->spectrum[i],par->startCh[i],par->endCh[i]);
               exit(-1);
             }
           
@@ -253,4 +254,19 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar)
       printf("\n");
     }
 
+}
+
+void applyBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data, fitteddata * fdata)
+{
+  int i,j,k;
+  //scale simulated data
+  for (i=0;i<par->numSimData;i++)
+    for (j=0;j<par->numSpectra;j++)
+      for (k=0;k<S32K;k++)
+        fdata->scaledSimHist[i][par->spectrum[j]][k]=fpar->scaleFactor[i][par->spectrum[j]]*data->simHist[i][par->spectrum[j]][k];
+  //generate background data
+  for (i=0;i<par->numSpectra;i++)
+    for (j=0;j<S32K;j++)
+      if(par->addBackground>=1)
+        fdata->bgHist[i][j]=fpar->bgA[par->spectrum[i]] + fpar->bgB[par->spectrum[i]]*j + fpar->bgC[par->spectrum[i]]*j*j;
 }

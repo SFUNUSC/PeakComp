@@ -38,18 +38,32 @@ typedef struct
   long double bgA[NSPECT],bgB[NSPECT],bgC[NSPECT];//background parameters (y = A + B*x + C*x*x)
 }fit_par; //fit parameters
 
+typedef struct
+{
+  int expHist[NSPECT][S32K];
+  int fittedExpHist[NSPECT][S32K];
+  int simHist[NSIMDATA][NSPECT][S32K];
+  int fittedSimHist[NSIMDATA][NSPECT][S32K];
+}histdata;
+
+typedef struct
+{
+  double scaledSimHist[NSIMDATA][NSPECT][S32K];
+  double bgHist[NSPECT][S32K];
+}fitteddata;
+
 //forward declarations
-void computeBackgroundandScaling(pc_par*,fit_par*);
-void compareSpectra(pc_par*);
-void plotSpectra(pc_par*);
-void saveSpectra(pc_par*);
+void applyBackgroundandScaling(pc_par*,fit_par*,histdata*,fitteddata*);
+void computeBackgroundandScaling(pc_par*,fit_par*,histdata*);
+void compareSpectra(pc_par*,histdata*,fitteddata*);
+void plotSpectra(pc_par*,histdata*,fitteddata*);
+void saveSpectra(pc_par*,fitteddata*);
 void sigint_cleanup();
 void readConfigFile(const char*,pc_par*);
-void findFittingWindow(pc_par * par);
+void findFittingWindow(pc_par*,histdata*);
+void readMCA(const char*,int,int[NSPECT][S32K]);
 
 //global variables (umad compsci profs?)
-int expHist[NSPECT][S32K],fittedExpHist[NSPECT][S32K],simHist[NSIMDATA][NSPECT][S32K],fittedSimHist[NSIMDATA][NSPECT][S32K];
-double scaledSimHist[NSIMDATA][NSPECT][S32K],bgHist[NSPECT][S32K];
 gnuplot_ctrl *handle;
 int plotOpen;//1 if plots are being displayed, 0 otherwise
 

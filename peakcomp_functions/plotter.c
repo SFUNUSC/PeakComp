@@ -1,7 +1,7 @@
 #include "peakcomp_functions.h"
 
 //function handles plotting of data, using the gnuplot_i library
-void plotSpectra(pc_par * par)
+void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
 {
   char str[256];
   int i,j,k;
@@ -17,14 +17,14 @@ void plotSpectra(pc_par * par)
     for (j=par->startCh[i];j<=par->endCh[i];j++)
       {
         x[i][j-par->startCh[i]]=(double)j;
-        yexp[i][j-par->startCh[i]]=(double)expHist[par->spectrum[i]][j];
+        yexp[i][j-par->startCh[i]]=(double)data->expHist[par->spectrum[i]][j];
         if(par->addBackground>=1)
-          ybackground[i][j-par->startCh[i]]=bgHist[i][j];
+          ybackground[i][j-par->startCh[i]]=fdata->bgHist[i][j];
         ysimsum[i][j-par->startCh[i]]=ybackground[i][j-par->startCh[i]];
         for (k=0;k<par->numSimData;k++)
           {
-            ysim[k][i][j-par->startCh[i]]=scaledSimHist[k][par->spectrum[i]][j];
-            ysimsum[i][j-par->startCh[i]]+=scaledSimHist[k][par->spectrum[i]][j];
+            ysim[k][i][j-par->startCh[i]]=fdata->scaledSimHist[k][par->spectrum[i]][j];
+            ysimsum[i][j-par->startCh[i]]+=fdata->scaledSimHist[k][par->spectrum[i]][j];
           }
       }
 

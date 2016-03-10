@@ -1,7 +1,7 @@
 #include "peakcomp_functions.h"
 
 //function compares spectra and gets chisq and other stats
-void compareSpectra(pc_par * par)
+void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
 {
   //initialize values
   int numFittedParameters[NSPECT],sumFittedParameters;
@@ -33,14 +33,14 @@ void compareSpectra(pc_par * par)
   //compute chisq for data in the spectra
   for (i=0;i<par->numSpectra;i++)
     for (j=par->startCh[i];j<=par->endCh[i];j++)
-      if(expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
+      if(data->expHist[par->spectrum[i]][j]!=0)//avoid dividing by zero
         {
           //get the sum of all simulated data in the given bin 
-          sumSimValue = bgHist[i][j];
+          sumSimValue = fdata->bgHist[i][j];
           for (k=0;k<par->numSimData;k++)
-            sumSimValue+=scaledSimHist[k][par->spectrum[i]][j];
+            sumSimValue+=fdata->scaledSimHist[k][par->spectrum[i]][j];
           //increment the chisq value
-          spectChisq[i]+=((expHist[par->spectrum[i]][j]-sumSimValue)*(expHist[par->spectrum[i]][j]-sumSimValue))/((double)expHist[par->spectrum[i]][j]);
+          spectChisq[i]+=((data->expHist[par->spectrum[i]][j]-sumSimValue)*(data->expHist[par->spectrum[i]][j]-sumSimValue))/((double)data->expHist[par->spectrum[i]][j]);
         }
       else
         binsSkipped[i]++;

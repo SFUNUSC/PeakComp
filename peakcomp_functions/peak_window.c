@@ -1,6 +1,6 @@
 #include "peakcomp_functions.h"
 
-void findFittingWindow(pc_par * par)
+void findFittingWindow(pc_par * par, histdata * data)
 {
   int i;
   printf("\nPEAK FINDER\n-----------\n");
@@ -10,7 +10,7 @@ void findFittingWindow(pc_par * par)
       pspar.searchMin=par->startCh[i];
       pspar.searchMax=par->endCh[i];
       pspar.windowSize=(int)(pspar.searchMax-pspar.searchMin)/10;
-      peak_fit_par pfpar = findPeak(&pspar, expHist[par->spectrum[i]], S32K);
+      peak_fit_par pfpar = findPeak(&pspar, data->expHist[par->spectrum[i]], S32K);
       printf("Spectrum %i: peak found with centroid at channel %i.\n",i,(int)pfpar.centroid);
       int range=abs(pspar.searchMax-pspar.searchMin);
       par->startCh[i]=pfpar.centroid-(int)(range/2);

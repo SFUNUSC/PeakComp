@@ -1,6 +1,5 @@
-Peak Comparison Tool
-Jonathan Williams
-
+TopSpek (A peak comparison and spectral decomposition tool)
+Written by Jonathan Williams
 
 A code for comparing peak shapes across simulated and experimental data in .mca files.  Useful for analysis of DSAM/RDM data.
 
