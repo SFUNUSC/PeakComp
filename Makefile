@@ -21,4 +21,4 @@ peakcomp_functions.o:peakcomp_functions/peakcomp_functions.c peakcomp_functions/
 	gcc $(CFLAGS) -c -o peakcomp_functions.o peakcomp_functions/peakcomp_functions.c
 
 clean:
-	rm -rf *~ *.o peak_comp *tmpdatafile*
+	rm -rf *~ *.o topspek *tmpdatafile*

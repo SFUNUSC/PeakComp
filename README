@@ -11,7 +11,7 @@ For a detailed example and description of how to specify parameters, see the 'sa
 
 Installation/Dependencies:
 Use 'make' to compile.  Requires gcc.  Optional data plotting requires gnuplot to be installed.
-To run the program from anywhere, move the resulting 'peak_comp' executable to any directory under your $PATH environment variable.
+To run the program from anywhere, move the resulting 'topspek' executable to any directory under your $PATH environment variable.
 Tested and working on Ubuntu 14.04 and Scientific Linux/CentOS 6.
 
 Outside Contributions:

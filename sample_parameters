@@ -17,7 +17,7 @@ SPECTRUM  START_CHANNEL END_CHANNEL FIX_BACKGROUND  BACKGROUND_PAR
 
 <---END_OF_PARAMETERS--->
 
-This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
+This is a parameter file for the topspek code.  The code will analyze and compare data in the specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
 
 Parameters and their descriptions follow:
 
