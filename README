@@ -1,5 +1,5 @@
 TopSpek (A peak comparison and spectral decomposition tool)
-Written by Jonathan Williams
+Maintainer: Jonathan Williams
 
 A code for comparing peak shapes across simulated and experimental data in .mca files.  Useful for analysis of DSAM/RDM data.
 
@@ -14,5 +14,7 @@ Use 'make' to compile.  Requires gcc.  Optional data plotting requires gnuplot t
 To run the program from anywhere, move the resulting 'topspek' executable to any directory under your $PATH environment variable.
 Tested and working on Ubuntu 14.04 and Scientific Linux/CentOS 6.
 
-Outside Contributions:
-This program uses linear equation solver code by K. Starosta for determining fit parameter values, and the public domain gnuplot_i library by N. Devillard for displaying plots.
+Contributions:
+J. Williams - core logic
+K. Starosta - linear equation solver code for determining fit parameter values
+N. Devillard - public domain gnuplot_i library by  for displaying plots
