@@ -90,15 +90,6 @@ void readParFile(const char * fileName, pc_par * par)
                   else
                     par->plotOutput=0;
                 }
-              if(strcmp(str1,"PLOT_STYLE")==0)
-                {
-                  if(strcmp(str2,"lin")==0)
-                    par->plotStyle=0;
-                  else if(strcmp(str2,"log")==0)
-                    par->plotStyle=1;
-                  else
-                    par->plotStyle=0;
-                }
               if(strcmp(str1,"SAVE_OUTPUT")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -173,9 +164,6 @@ void readParFile(const char * fileName, pc_par * par)
     printf("Will plot output data.\n");
   if(par->plotOutput==2)
     printf("Will plot detailed output data.\n");
-  if(par->plotOutput>0)
-    if(par->plotStyle==1)
-      printf("Will plot using logarithmic y-axis.\n");
   if(par->saveOutput==0)
     printf("Will not save fitted simulation data.\n");
   if(par->saveOutput==1)

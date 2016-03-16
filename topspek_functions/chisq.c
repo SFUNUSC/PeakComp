@@ -46,7 +46,7 @@ void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
   for (i=0;i<par->numSpectra;i++)
     sumBinsSkipped+=binsSkipped[i];
   if(sumBinsSkipped>0)
-    printf("\nWarning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n\n",sumBinsSkipped);
+    printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n\n",sumBinsSkipped);
     
   //compute total chisq and reduced total chisq
   for (i=0;i<par->numSpectra;i++)

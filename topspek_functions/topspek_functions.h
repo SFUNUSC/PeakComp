@@ -25,7 +25,6 @@ typedef struct
   int fitAddBackground[NSPECT];
   int peakSearch;//0=no,1=yes
   int plotOutput;//0=no,1=yes,2=detailed
-  int plotStyle;//0=lin-lin, 1=log-lin
   int saveOutput;//0=no,1=yes
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
   int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
@@ -57,8 +56,8 @@ void applyBackgroundandScaling(pc_par*,fit_par*,histdata*,fitteddata*);
 void computeBackgroundandScaling(pc_par*,fit_par*,histdata*);
 void compareSpectra(pc_par*,histdata*,fitteddata*);
 void plotSpectra(pc_par*,histdata*,fitteddata*);
-void saveSpectra(pc_par*,fitteddata*);
 void sigint_cleanup();
+void saveSpectra(pc_par*,fitteddata*);
 void readParFile(const char*,pc_par*);
 void findFittingWindow(pc_par*,histdata*);
 void readMCA(const char*,int,int[NSPECT][S32K]);

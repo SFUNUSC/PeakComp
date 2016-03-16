@@ -2,7 +2,6 @@ EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
 ADD_BACKGROUND              quad
 PEAK_SEARCH                 no
 PLOT_OUTPUT                 yes
-PLOT_STYLE                  lin
 SAVE_OUTPUT                 yes
 
 SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
@@ -37,11 +36,6 @@ PLOT_OUTPUT
 no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
 detailed: Same as 'yes', except plot all simulated datasets and background as well.
-
-PLOT_STYLE
-Doesn't do anything if plotting is disabled.
-lin: Plot with linear scale on both axes.
-log: Plot with log scale on the y axis.
 
 SAVE_OUTPUT
 yes: Save fitted simulation data to mca files.  Filenames are fit_background.mca (background data), fit_simN.mca, where N is a number corresponding to each simulated data set.

@@ -28,11 +28,9 @@ void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
 
   plotOpen=1; 
   handle=gnuplot_init();
-  printf("\n");
+  printf("\nDATA PLOTS\n----------\nUse 'l' in the plotting window to switch between linear and logarithmic scale.\n");
   for(i=0;i<par->numSpectra;i++)
     {
-      if(par->plotStyle==1)//log-lin plot
-        gnuplot_cmd(handle,"set logscale y");
       gnuplot_setstyle(handle,"steps");
       gnuplot_cmd(handle,"set xlabel 'Channel'");
       gnuplot_cmd(handle,"set ylabel 'Counts'");
@@ -60,9 +58,9 @@ void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
       else //simple plot
         gnuplot_plot_xy(handle, x[i], ysimsum[i], par->endCh[i]-par->startCh[i]+1, "Simulation and Background(sum)");
       if(i!=par->numSpectra-1)//check whether we're showing the last plot
-        printf("Showing plot for spectrum %i, press [ENTER] to continue...", par->spectrum[i]);
+        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to continue...", par->spectrum[i],par->startCh[i],par->endCh[i]);
       else
-        printf("Showing plot for spectrum %i, press [ENTER] to exit.", par->spectrum[i]);
+        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to exit.", par->spectrum[i],par->startCh[i],par->endCh[i]);
       getc(stdin);
       gnuplot_resetplot(handle);
     }
@@ -75,7 +73,6 @@ void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
   free(ysimsum);
   
 }
-
 
 //function run after CTRL-C, used to clean up temporary files generated
 //by the plotting library
