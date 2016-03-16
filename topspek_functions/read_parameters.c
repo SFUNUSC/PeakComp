@@ -1,6 +1,5 @@
-#include "peakcomp_functions.h"
-
-void readConfigFile(const char * fileName, pc_par * par) 
+//function reads parameter files for the topspek code
+void readParFile(const char * fileName, pc_par * par) 
 {
   FILE *config;
   char str[256],str1[256],str2[256];

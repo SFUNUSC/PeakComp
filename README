@@ -17,4 +17,4 @@ Tested and working on Ubuntu 14.04 and Scientific Linux/CentOS 6.
 Contributions:
 J. Williams - core logic
 K. Starosta - linear equation solver code for determining fit parameter values
-N. Devillard - public domain gnuplot_i library by  for displaying plots
+N. Devillard - public domain gnuplot_i library for displaying plots

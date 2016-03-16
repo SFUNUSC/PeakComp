@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 //function compares spectra and gets chisq and other stats
 void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
 {

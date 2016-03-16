@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 void findFittingWindow(pc_par * par, histdata * data)
 {
   int i;

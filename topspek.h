@@ -1,11 +1,11 @@
-#ifndef PC_H
-#define PC_H
+#ifndef TS_H
+#define TS_H
 
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "peakcomp_functions.h"
+#include "topspek_functions.h"
 
 #endif
 

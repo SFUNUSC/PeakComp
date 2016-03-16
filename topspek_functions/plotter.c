@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 //function handles plotting of data, using the gnuplot_i library
 void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
 {

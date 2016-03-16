@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 //function handles saving of fitted data
 void saveSpectra(pc_par * par, fitteddata * fdata)
 {

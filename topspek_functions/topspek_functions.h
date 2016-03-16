@@ -1,5 +1,5 @@
-#ifndef PCF_H
-#define PCF_H
+#ifndef TSF_H
+#define TSF_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,7 +59,7 @@ void compareSpectra(pc_par*,histdata*,fitteddata*);
 void plotSpectra(pc_par*,histdata*,fitteddata*);
 void saveSpectra(pc_par*,fitteddata*);
 void sigint_cleanup();
-void readConfigFile(const char*,pc_par*);
+void readParFile(const char*,pc_par*);
 void findFittingWindow(pc_par*,histdata*);
 void readMCA(const char*,int,int[NSPECT][S32K]);
 

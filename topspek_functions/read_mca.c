@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 //function reads an .mca file into an integer array and returns the array
 void readMCA(const char * filename, int numSpec, int outHist[NSPECT][S32K])
 {

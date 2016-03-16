@@ -1,4 +1,4 @@
-#include "peak_comp.h"
+#include "topspek.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
   histdata *data=(histdata*)malloc(sizeof(histdata));
   fitteddata *fdata=(fitteddata*)malloc(sizeof(fitteddata));
 
-  readConfigFile(argv[1],par); //grab data from the parameter file (see read_config.c)
+  readParFile(argv[1],par); //grab data from the parameter file (see read_config.c)
   
   //check that the number of spectra being compared is fine
   if(par->endSpectrum>=NSPECT)

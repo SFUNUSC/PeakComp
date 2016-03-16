@@ -1,5 +1,3 @@
-#include "peakcomp_functions.h"
-
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
 //chisq=sum_i[(meas_i - A - B*i - scaleFactor_1*sim_1i - scaleFactor_2*sim_2i - ...)^2 / meas_i]
