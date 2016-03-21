@@ -41,12 +41,9 @@ void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
           spectChisq[i]+=((data->expHist[par->spectrum[i]][j]-sumSimValue)*(data->expHist[par->spectrum[i]][j]-sumSimValue))/((double)data->expHist[par->spectrum[i]][j]);
         }
       else
-        binsSkipped[i]++;
-  
+        binsSkipped[i]++;  
   for (i=0;i<par->numSpectra;i++)
     sumBinsSkipped+=binsSkipped[i];
-  if(sumBinsSkipped>0)
-    printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i.\n\n",sumBinsSkipped);
     
   //compute total chisq and reduced total chisq
   for (i=0;i<par->numSpectra;i++)
@@ -60,6 +57,8 @@ void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
   
   //print output
   printf("COMPARISON DATA\n---------------\n");
+  if(sumBinsSkipped>0)
+    printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i\n\n",sumBinsSkipped);
   if(par->numSpectra>1)
     for (i=0;i<par->numSpectra;i++)
       printf("Spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
