@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
       printf("Compares the .mca spectra designated in the parameter file specified and generates cool statistics.\n\n");
       exit(-1);
     }
-  printf("\n");
 
   int i,j,k;
   
@@ -86,7 +85,7 @@ int main(int argc, char *argv[])
           for (k=0;k<S32K;k++)
             data->fittedExpHist[j][k]-=par->simDataFixedAmpValue[i]*data->simHist[i][j][k];
     }
-  printf("Spectra read in...\n");
+  if(par->verbose>=0) printf("Spectra read in...\n");
   
   if(par->peakSearch==1)
     findFittingWindow(par,data);//find peaks and shift fitting windows (see peak_window.c)
@@ -97,7 +96,7 @@ int main(int argc, char *argv[])
 
   compareSpectra(par,data,fdata);//generate chisq stats (see chisq.c)
   
-  if(par->plotOutput>=1)
+  if((par->plotOutput>=1)&&(par->verbose>=0))
     plotSpectra(par,data,fdata);//see plotter.c
   
   if(par->saveOutput==1)

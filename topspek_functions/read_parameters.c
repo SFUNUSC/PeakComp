@@ -97,6 +97,13 @@ void readParFile(const char * fileName, pc_par * par)
                   else
                     par->saveOutput=0;
                 }
+              if(strcmp(str1,"VERBOSITY")==0)
+                {
+                  if(strcmp(str2,"chisq")==0)
+                    par->verbose=-1;
+                  else
+                    par->verbose=0;
+                }
             }
           
           if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
@@ -129,62 +136,64 @@ void readParFile(const char * fileName, pc_par * par)
       par->fixedBGPar[index][2]=0;
   
   //print parameters read from the file
-  printf("Taking experiment data from file: %s\n",par->expDataName);
-  for(index=0;index<par->numSimData;index++)
+  if(par->verbose>=0)
     {
-      printf("Taking simulated data from file (%i of %i): %s\n",index+1,par->numSimData,par->simDataName[index]);
-      if(par->simDataFixedAmp[index]==1)
-        printf("Fixing scaling factor for this data to %lf\n",par->simDataFixedAmpValue[index]);
-      if(par->simDataFixedAmp[index]==2)
-        printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",par->simDataFixedAmpValue[index]);
-    }
-  if(par->peakSearch==0)
-    for(index=0;index<par->numSpectra;index++)
-      printf("Will compare spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
-  else
-    for(index=0;index<par->numSpectra;index++)
-      printf("Will search for a peak in spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
-  if(par->addBackground==0)
-    printf("Will not add background to simulated data.\n");
-  if(par->addBackground==1)
-    printf("Will add a linear background to simulated data.\n");
-  if(par->addBackground==2)
-    printf("Will add a quadratic background to simulated data.\n");
-  if(par->addBackground==1)
-    for(index=0;index<par->numSpectra;index++)
-      if(par->fixBG[index]==1)
-        printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",par->fixedBGPar[index][0],par->fixedBGPar[index][1],par->spectrum[index],par->startCh[index],par->endCh[index]);
-  if(par->addBackground==2)
-    for(index=0;index<par->numSpectra;index++)
-      if(par->fixBG[index]==1)
-        printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",par->fixedBGPar[index][0],par->fixedBGPar[index][1],par->fixedBGPar[index][2],par->spectrum[index],par->startCh[index],par->endCh[index]);
-  if(par->plotOutput==0)
-    printf("Will not plot output data.\n");
-  if(par->plotOutput==1)
-    printf("Will plot output data.\n");
-  if(par->plotOutput==2)
-    printf("Will plot detailed output data.\n");
-  if(par->saveOutput==0)
-    printf("Will not save fitted simulation data.\n");
-  if(par->saveOutput==1)
-    {
+      printf("\nTaking experiment data from file: %s\n",par->expDataName);
+      for(index=0;index<par->numSimData;index++)
+        {
+          printf("Taking simulated data from file (%i of %i): %s\n",index+1,par->numSimData,par->simDataName[index]);
+          if(par->simDataFixedAmp[index]==1)
+            printf("Fixing scaling factor for this data to %lf\n",par->simDataFixedAmpValue[index]);
+          if(par->simDataFixedAmp[index]==2)
+            printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",par->simDataFixedAmpValue[index]);
+        }
+      if(par->peakSearch==0)
+        for(index=0;index<par->numSpectra;index++)
+          printf("Will compare spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
+      else
+        for(index=0;index<par->numSpectra;index++)
+          printf("Will search for a peak in spectrum %i from channels %i to %i.\n",par->spectrum[index],par->startCh[index],par->endCh[index]);
       if(par->addBackground==0)
+        printf("Will not add background to simulated data.\n");
+      if(par->addBackground==1)
+        printf("Will add a linear background to simulated data.\n");
+      if(par->addBackground==2)
+        printf("Will add a quadratic background to simulated data.\n");
+      if(par->addBackground==1)
+        for(index=0;index<par->numSpectra;index++)
+          if(par->fixBG[index]==1)
+            printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",par->fixedBGPar[index][0],par->fixedBGPar[index][1],par->spectrum[index],par->startCh[index],par->endCh[index]);
+      if(par->addBackground==2)
+        for(index=0;index<par->numSpectra;index++)
+          if(par->fixBG[index]==1)
+            printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",par->fixedBGPar[index][0],par->fixedBGPar[index][1],par->fixedBGPar[index][2],par->spectrum[index],par->startCh[index],par->endCh[index]);
+      if(par->plotOutput==0)
+        printf("Will not plot output data.\n");
+      if(par->plotOutput==1)
+        printf("Will plot output data.\n");
+      if(par->plotOutput==2)
+        printf("Will plot detailed output data.\n");
+      if(par->saveOutput==0)
+        printf("Will not save fitted simulation data.\n");
+      if(par->saveOutput==1)
         {
-          if(par->numSimData>1)
-            printf("Will save fitted simulation data to files fit_sim0.mca through fit_sim%i.mca.\n",par->numSimData-1);
-          else
-            printf("Will save fitted simulation data to file fit_sim0.mca.\n");
+          if(par->addBackground==0)
+            {
+              if(par->numSimData>1)
+                printf("Will save fitted simulation data to files fit_sim0.mca through fit_sim%i.mca.\n",par->numSimData-1);
+              else
+                printf("Will save fitted simulation data to file fit_sim0.mca.\n");
+            }
+          else if(par->addBackground==1)
+            {
+              if(par->numSimData>1)
+                printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca through fit_sim%i.mca.\n",par->numSimData-1);
+              else
+                printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca.\n");
+            }
         }
-      else if(par->addBackground==1)
-        {
-          if(par->numSimData>1)
-            printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca through fit_sim%i.mca.\n",par->numSimData-1);
-          else
-            printf("Will save fitted simulation data to files fit_background.mca and fit_sim0.mca.\n");
-        }
+      
+      printf("Finished reading parameter file...\n");
     }
-
-  
-  printf("Finished reading parameter file...\n");
   
 }

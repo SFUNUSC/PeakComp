@@ -7,7 +7,8 @@ void saveSpectra(pc_par * par, fitteddata * fdata)
   
   int ***outHist=allocateArrayI3(par->numSimData,par->numSpectra,S32K); //allocate array
   
-  printf("Saving scaled simulation data to output file(s)...\n");
+  if(par->verbose>=0)
+    printf("Saving scaled simulation data to output file(s)...\n");
   
   //construct arrays
   for (i=0;i<par->numSpectra;i++)

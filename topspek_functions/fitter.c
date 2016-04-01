@@ -9,7 +9,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data)
   double **fittedScaleFactor=allocateArrayD2(NSIMDATA,NSPECT);
   int i,j,k,l;
   lin_eq_type linEq;
-  printf("\n");
+  if(par->verbose>=0) printf("\n");
   
   if(par->numFittedSimData>0)
     {
@@ -184,7 +184,7 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data)
 
         }
     }
-  else
+  else if(par->verbose>=0)
     printf("NOTE: All scaling parameters are fixed, no chisq minimzation was performed.\n\n");
     
   //generate scaling factors for all spectra, including those that weren't fitted
@@ -231,25 +231,28 @@ void computeBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data)
   free(fittedScaleFactor);
   
   //print fit data
-  printf("FIT DATA\n--------\n");
-  for (i=0;i<par->numSpectra;i++)
+  if(par->verbose>=0)
     {
-      if(par->addBackground==0)
-        printf("Spectrum %i, channel %i to %i:\n",par->spectrum[i],par->startCh[i],par->endCh[i]);
-      else if((par->addBackground==1)&&(par->fitAddBackground[i]==par->addBackground))
-        printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
-      else if(par->addBackground==1)
-        printf("Spectrum %i, channel %i to %i:\nUsing linear background of form [A + B*channel],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
-      else if((par->addBackground==2)&&(par->fitAddBackground[i]==par->addBackground))
-        printf("Spectrum %i, channel %i to %i:\nFit quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE, B = %0.5LE, C = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
-      else if(par->addBackground==2)
-        printf("Spectrum %i, channel %i to %i:\nUsing quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED], C = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
-      for (j=0;j<par->numSimData;j++)
-        if(par->simDataFixedAmp[j]==0)
-          printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-        else
-          printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
-      printf("\n");
+      printf("FIT DATA\n--------\n");
+      for (i=0;i<par->numSpectra;i++)
+        {
+          if(par->addBackground==0)
+            printf("Spectrum %i, channel %i to %i:\n",par->spectrum[i],par->startCh[i],par->endCh[i]);
+          else if((par->addBackground==1)&&(par->fitAddBackground[i]==par->addBackground))
+            printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
+          else if(par->addBackground==1)
+            printf("Spectrum %i, channel %i to %i:\nUsing linear background of form [A + B*channel],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]]);
+          else if((par->addBackground==2)&&(par->fitAddBackground[i]==par->addBackground))
+            printf("Spectrum %i, channel %i to %i:\nFit quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE, B = %0.5LE, C = %0.5LE\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
+          else if(par->addBackground==2)
+            printf("Spectrum %i, channel %i to %i:\nUsing quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED], C = %0.5LE [FIXED]\n",par->spectrum[i],par->startCh[i],par->endCh[i],fpar->bgA[par->spectrum[i]],fpar->bgB[par->spectrum[i]],fpar->bgC[par->spectrum[i]]);
+          for (j=0;j<par->numSimData;j++)
+            if(par->simDataFixedAmp[j]==0)
+              printf("Scaling factor for data from file %s: %f\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
+            else
+              printf("Scaling factor for data from file %s: %f [FIXED]\n",par->simDataName[j],fpar->scaleFactor[j][par->spectrum[i]]);
+          printf("\n");
+        }
     }
 
 }

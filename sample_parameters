@@ -3,6 +3,7 @@ ADD_BACKGROUND              quad
 PEAK_SEARCH                 no
 PLOT_OUTPUT                 yes
 SAVE_OUTPUT                 yes
+VERBOSITY                   normal
 
 SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
 test.mca          no            1
@@ -18,7 +19,7 @@ SPECTRUM  START_CHANNEL END_CHANNEL FIX_BACKGROUND  BACKGROUND_PAR
 
 This is a parameter file for the topspek code.  The code will analyze and compare data in the specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
 
-Parameters and their descriptions follow:
+Parameters and their descriptions follow.  If a parameter is not specified, the program will attempt to use a default value if availiable.
 
 EXPERIMENT_DATA
 Contains the path to the .mca file containing experiment data.
@@ -40,6 +41,10 @@ detailed: Same as 'yes', except plot all simulated datasets and background as we
 SAVE_OUTPUT
 yes: Save fitted simulation data to mca files.  Filenames are fit_background.mca (background data), fit_simN.mca, where N is a number corresponding to each simulated data set.
 no: Don't save fitted simulation data.
+
+VERBOSITY
+normal: Print various information when running the program (default).
+chisq: Don't show any plots and only print the reduced chisq value of the fit (if fitting is successful).  Useful for interfacing the program with shell scripts.
 
 SIMULATED_DATA
 Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.

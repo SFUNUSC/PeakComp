@@ -26,6 +26,7 @@ typedef struct
   int peakSearch;//0=no,1=yes
   int plotOutput;//0=no,1=yes,2=detailed
   int saveOutput;//0=no,1=yes
+  int verbose;//0=normal,-1=only output chisq value, no plots or other stats
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
   int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
   double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data

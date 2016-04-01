@@ -56,15 +56,20 @@ void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
   redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
   
   //print output
-  printf("COMPARISON DATA\n---------------\n");
-  if(sumBinsSkipped>0)
-    printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i\n\n",sumBinsSkipped);
-  if(par->numSpectra>1)
-    for (i=0;i<par->numSpectra;i++)
-      printf("Spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
-  printf("Chisq (total): %f\n",chisq);
-  printf("Number of bins (total): %i\n",sumBinsUsed);
-  printf("Number of fitted parameters (total): %i\n",sumFittedParameters);
-  printf("Reduced chisq (total): %f\n",redChisq);
+  if(par->verbose>=0)
+    {
+      printf("COMPARISON DATA\n---------------\n");
+      if(sumBinsSkipped>0)
+        printf("Warning: some of the bins in the experiment data have values of zero.  These have been skipped when calculating chisq.  Bins skipped: %i\n\n",sumBinsSkipped);
+      if(par->numSpectra>1)
+        for (i=0;i<par->numSpectra;i++)
+          printf("Spectrum %i, channel %i to %i - chisq: %f, reduced chisq: %f\n",par->spectrum[i],par->startCh[i],par->endCh[i],spectChisq[i],spectRedChisq[i]);
+      printf("Chisq (total): %f\n",chisq);
+      printf("Number of bins (total): %i\n",sumBinsUsed);
+      printf("Number of fitted parameters (total): %i\n",sumFittedParameters);
+      printf("Reduced chisq (total): %f\n",redChisq);
+    }
+  else if(par->verbose==-1)
+    printf("%f\n",redChisq);//only print the reduced chisq
   
 }
