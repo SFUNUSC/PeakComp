@@ -1,5 +1,5 @@
 //function handles plotting of data, using the gnuplot_i library
-void plotSpectra(pc_par * par, histdata * data, fitteddata * fdata )
+void plotSpectra(const pc_par * par, const histdata * data, const fitteddata * fdata )
 {
   char str[256];
   int i,j,k;

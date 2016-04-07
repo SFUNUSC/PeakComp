@@ -1,5 +1,5 @@
 //function handles saving of fitted data
-void saveSpectra(pc_par * par, fitteddata * fdata)
+void saveSpectra(const pc_par * par, const fitteddata * fdata)
 {
   FILE *output;
   char str[256];

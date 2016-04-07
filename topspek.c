@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
   if(argc!=2)
     {
-      printf("\ntopspek parameter_file\n");
+      printf("\ntopspek parameter_file\n----------------------\n\n");
       printf("Compares the .mca spectra designated in the parameter file specified and generates cool statistics.\n\n");
       exit(-1);
     }
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
   if(par->peakSearch==1)
     findFittingWindow(par,data);//find peaks and shift fitting windows (see peak_window.c)
 
-  computeBackgroundandScaling(par,fpar,data);//get background coefficients and scaling factors (see fitter.c)
+  computeBackgroundandScaling(par,data,fpar);//get background coefficients and scaling factors (see fitter.c)
    
   applyBackgroundandScaling(par,fpar,data,fdata);//apply fit parameters to data (see fitter.c)
 

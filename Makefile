@@ -2,7 +2,7 @@ CFLAGS   = -I./topspek_functions -I./gnuplot_i -I./lin_eq_solver -I./utils -o2 -
 
 all: lib topspek
 
-topspek: topspek.c topspek.h peak_find.o
+topspek: topspek.c topspek.h gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o
 	@echo Making topspek...
 	gcc topspek.c $(CFLAGS) -o topspek gnuplot_i.o lin_eq_solver.o dynamic_arrays.o peak_find.o
 	@echo Tidying up...

@@ -1,5 +1,5 @@
 //function compares spectra and gets chisq and other stats
-void compareSpectra(pc_par * par, histdata * data, fitteddata * fdata)
+void compareSpectra(const pc_par * par, const histdata * data, const fitteddata * fdata)
 {
   //initialize values
   int numFittedParameters[NSPECT],sumFittedParameters;

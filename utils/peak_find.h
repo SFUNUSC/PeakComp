@@ -18,6 +18,6 @@ typedef struct
 
 
 //Functions for dynamically allocating arrays at runtime (on the heap) that have indices for each dimension
-peak_fit_par findPeak(peak_search_par*,int*,int);
+peak_fit_par findPeak(const peak_search_par*,const int*,const int);
 
 #endif

@@ -1,5 +1,5 @@
 //function reads an .mca file into an integer array and returns the array
-void readMCA(const char * filename, int numSpec, int outHist[NSPECT][S32K])
+void readMCA(const char * filename, const int numSpec, int outHist[NSPECT][S32K])
 {
   FILE *inp;
   int i;

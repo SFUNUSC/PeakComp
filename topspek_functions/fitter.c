@@ -1,7 +1,7 @@
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
 //chisq=sum_i[(meas_i - A - B*i - scaleFactor_1*sim_1i - scaleFactor_2*sim_2i - ...)^2 / meas_i]
-void computeBackgroundandScaling(pc_par * par, fit_par * fpar, histdata * data)
+void computeBackgroundandScaling(const pc_par * par, const histdata * data, fit_par * fpar)
 {
 
   long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,iii_sum,iiii_sum,sum1; //sums needed to construct system of equations

@@ -1,4 +1,4 @@
-void findFittingWindow(pc_par * par, histdata * data)
+void findFittingWindow(pc_par * par, const histdata * data)
 {
   int i;
   if(par->verbose>=0)
