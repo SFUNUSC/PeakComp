@@ -27,15 +27,15 @@ int main(int argc, char *argv[])
   int i,j,k;
   
   //allocate structures
-  pc_par *par=(pc_par*)malloc(sizeof(pc_par));
-  fit_par *fpar=(fit_par*)malloc(sizeof(fit_par));
-  histdata *data=(histdata*)malloc(sizeof(histdata));
-  fitteddata *fdata=(fitteddata*)malloc(sizeof(fitteddata));
+  par *p=(par*)malloc(sizeof(par));
+  fitpar *fp=(fitpar*)malloc(sizeof(fitpar));
+  data *d=(data*)malloc(sizeof(data));
+  fitdata *fd=(fitdata*)malloc(sizeof(fitdata));
 
-  readParFile(argv[1],par); //grab data from the parameter file (see read_config.c)
+  readParFile(argv[1],p); //grab data from the parameter file (see read_config.c)
   
   //check that the number of spectra being compared is fine
-  if(par->endSpectrum>=NSPECT)
+  if(p->endSpectrum>=NSPECT)
     {
       printf("ERROR: A spectrum number specified in the parameter file is larger than the maximum value of %i.  Reduce it or increase NSPECT in peak_comp.h and recompile.\n",NSPECT);
       exit(-1);
@@ -43,70 +43,70 @@ int main(int argc, char *argv[])
     
 
   //read in the .mca files
-  readMCA(par->expDataName,par->endSpectrum+1,data->expHist);
-  readMCA(par->expDataName,par->endSpectrum+1,data->fittedExpHist);
-  for (i=0;i<par->numSimData;i++) 
+  readMCA(p->expDataName,p->endSpectrum+1,d->expHist);
+  readMCA(p->expDataName,p->endSpectrum+1,d->fittedExpHist);
+  for (i=0;i<p->numSimData;i++) 
     {
-      readMCA(par->simDataName[i],par->endSpectrum+1,data->simHist[i]);
-      readMCA(par->simDataName[i],par->endSpectrum+1,data->fittedSimHist[i]);
+      readMCA(p->simDataName[i],p->endSpectrum+1,d->simHist[i]);
+      readMCA(p->simDataName[i],p->endSpectrum+1,d->fittedSimHist[i]);
     }
     
   //generate data for fitting
-  for (j=0;j<=par->endSpectrum;j++)
-    for (i=0;i<par->numSpectra;i++)
-      if(par->spectrum[i]==j)
+  for (j=0;j<=p->endSpectrum;j++)
+    for (i=0;i<p->numSpectra;i++)
+      if(p->spectrum[i]==j)
         {
-          if(par->fixBG[i]!=0)
+          if(p->fixBG[i]!=0)
             for (k=0;k<S32K;k++)
-              data->fittedExpHist[j][k]=data->expHist[j][k] - par->fixedBGPar[i][0] - par->fixedBGPar[i][1]*k - par->fixedBGPar[i][2]*k*k;
+              d->fittedExpHist[j][k]=d->expHist[j][k] - p->fixedBGPar[i][0] - p->fixedBGPar[i][1]*k - p->fixedBGPar[i][2]*k*k;
         }
     
   int fi=0;//index for simulated data to be fitted
-  for (i=0;i<par->numSimData;i++)
+  for (i=0;i<p->numSimData;i++)
     {
           
       //determine whether simulated data is fitted and read into histograms for fitting as needed
-      if(par->simDataFixedAmp[i]==0)
+      if(p->simDataFixedAmp[i]==0)
         {
-          for (j=0;j<=par->endSpectrum;j++)
+          for (j=0;j<=p->endSpectrum;j++)
             for (k=0;k<S32K;k++)
-              data->fittedSimHist[fi][j][k]=data->simHist[i][j][k];
+              d->fittedSimHist[fi][j][k]=d->simHist[i][j][k];
           fi++;
         }
-      else if(par->simDataFixedAmp[i]==2)//data scaling is fixed relative to the previous fitted dataset
+      else if(p->simDataFixedAmp[i]==2)//data scaling is fixed relative to the previous fitted dataset
         {
           if(fi>0)
-            for (j=0;j<=par->endSpectrum;j++)
+            for (j=0;j<=p->endSpectrum;j++)
               for (k=0;k<S32K;k++)
-                data->fittedSimHist[fi-1][j][k]+=par->simDataFixedAmpValue[i]*data->simHist[i][j][k];//add this data to the data that it is scaled relative to
+                d->fittedSimHist[fi-1][j][k]+=p->simDataFixedAmpValue[i]*d->simHist[i][j][k];//add this data to the data that it is scaled relative to
         }
-      else if(par->simDataFixedAmp[i]==1)//data scaling is fixed to a specified value (will not be fitted)
-        for (j=0;j<=par->endSpectrum;j++)
+      else if(p->simDataFixedAmp[i]==1)//data scaling is fixed to a specified value (will not be fitted)
+        for (j=0;j<=p->endSpectrum;j++)
           for (k=0;k<S32K;k++)
-            data->fittedExpHist[j][k]-=par->simDataFixedAmpValue[i]*data->simHist[i][j][k];
+            d->fittedExpHist[j][k]-=p->simDataFixedAmpValue[i]*d->simHist[i][j][k];
     }
-  if(par->verbose>=0) printf("Spectra read in...\n");
+  if(p->verbose>=0) printf("Spectra read in...\n");
   
-  if(par->peakSearch==1)
-    findFittingWindow(par,data);//find peaks and shift fitting windows (see peak_window.c)
+  if(p->peakSearch==1)
+    findFittingWindow(p,d);//find peaks and shift fitting windows (see peak_window.c)
 
-  computeBackgroundandScaling(par,data,fpar);//get background coefficients and scaling factors (see fitter.c)
+  computeBackgroundandScaling(p,d,fp);//get background coefficients and scaling factors (see fitter.c)
    
-  applyBackgroundandScaling(par,fpar,data,fdata);//apply fit parameters to data (see fitter.c)
+  applyBackgroundandScaling(p,fp,d,fd);//apply fit parameters to data (see fitter.c)
 
-  compareSpectra(par,data,fdata);//generate chisq stats (see chisq.c)
+  compareSpectra(p,d,fd);//generate chisq stats (see chisq.c)
   
-  if((par->plotOutput>=1)&&(par->verbose>=0))
-    plotSpectra(par,data,fdata);//see plotter.c
+  if((p->plotOutput>=1)&&(p->verbose>=0))
+    plotSpectra(p,d,fd);//see plotter.c
   
-  if(par->saveOutput==1)
-    saveSpectra(par,fdata);//see save_data.c
+  if(p->saveOutput==1)
+    saveSpectra(p,fd);//see save_data.c
   
   //free structures
-  free(par);
-  free(fpar);
-  free(data);
-  free(fdata);
+  free(p);
+  free(fp);
+  free(d);
+  free(fd);
 
   return 0; //great success
 }

@@ -1,66 +1,66 @@
 //function handles plotting of data, using the gnuplot_i library
-void plotSpectra(const pc_par * par, const histdata * data, const fitteddata * fdata )
+void plotSpectra(const par * p, const data * d, const fitdata * fd)
 {
   char str[256];
   int i,j,k;
   
   //allocate arrays to hold plot data
-  double** x=allocateArrayD2(par->numSpectra,par->maxNumCh);
-  double** yexp=allocateArrayD2(par->numSpectra,par->maxNumCh);
-  double*** ysim=allocateArrayD3(NSIMDATA,par->numSpectra,par->maxNumCh);
-  double** ybackground=allocateArrayD2(par->numSpectra,par->maxNumCh);
-  double** ysimsum=allocateArrayD2(par->numSpectra,par->maxNumCh);
+  double** x=allocateArrayD2(p->numSpectra,p->maxNumCh);
+  double** yexp=allocateArrayD2(p->numSpectra,p->maxNumCh);
+  double*** ysim=allocateArrayD3(NSIMDATA,p->numSpectra,p->maxNumCh);
+  double** ybackground=allocateArrayD2(p->numSpectra,p->maxNumCh);
+  double** ysimsum=allocateArrayD2(p->numSpectra,p->maxNumCh);
   
-  for (i=0;i<par->numSpectra;i++)
-    for (j=par->startCh[i];j<=par->endCh[i];j++)
+  for (i=0;i<p->numSpectra;i++)
+    for (j=p->startCh[i];j<=p->endCh[i];j++)
       {
-        x[i][j-par->startCh[i]]=(double)j;
-        yexp[i][j-par->startCh[i]]=(double)data->expHist[par->spectrum[i]][j];
-        if(par->addBackground>=1)
-          ybackground[i][j-par->startCh[i]]=fdata->bgHist[i][j];
-        ysimsum[i][j-par->startCh[i]]=ybackground[i][j-par->startCh[i]];
-        for (k=0;k<par->numSimData;k++)
+        x[i][j-p->startCh[i]]=(double)j;
+        yexp[i][j-p->startCh[i]]=(double)d->expHist[p->spectrum[i]][j];
+        if(p->addBackground>=1)
+          ybackground[i][j-p->startCh[i]]=fd->bgHist[i][j];
+        ysimsum[i][j-p->startCh[i]]=ybackground[i][j-p->startCh[i]];
+        for (k=0;k<p->numSimData;k++)
           {
-            ysim[k][i][j-par->startCh[i]]=fdata->scaledSimHist[k][par->spectrum[i]][j];
-            ysimsum[i][j-par->startCh[i]]+=fdata->scaledSimHist[k][par->spectrum[i]][j];
+            ysim[k][i][j-p->startCh[i]]=fd->scaledSimHist[k][i][j];
+            ysimsum[i][j-p->startCh[i]]+=fd->scaledSimHist[k][i][j];
           }
       }
 
   plotOpen=1; 
   handle=gnuplot_init();
   printf("\nDATA PLOTS\n----------\nUse 'l' in the plotting window to switch between linear and logarithmic scale.\n");
-  for(i=0;i<par->numSpectra;i++)
+  for(i=0;i<p->numSpectra;i++)
     {
       gnuplot_setstyle(handle,"steps");
       gnuplot_cmd(handle,"set xlabel 'Channel'");
       gnuplot_cmd(handle,"set ylabel 'Counts'");
-      gnuplot_plot_xy(handle, x[i], yexp[i], par->endCh[i]-par->startCh[i]+1, "Experiment");
-      if(par->plotOutput>1)//detailed plot
+      gnuplot_plot_xy(handle, x[i], yexp[i], p->endCh[i]-p->startCh[i]+1, "Experiment");
+      if(p->plotOutput>1)//detailed plot
         {
-          if(par->addBackground>=1)//plot background
+          if(p->addBackground>=1)//plot background
             {
               gnuplot_setstyle(handle,"lines"); //plot background as a line
-              gnuplot_plot_xy(handle, x[i], ybackground[i], par->endCh[i]-par->startCh[i]+1, "Background");
+              gnuplot_plot_xy(handle, x[i], ybackground[i], p->endCh[i]-p->startCh[i]+1, "Background");
               gnuplot_setstyle(handle,"steps"); //set the plot style back
             }
-          for (j=0;j<par->numSimData;j++)//plot individual sim data
+          for (j=0;j<p->numSimData;j++)//plot individual sim data
             {
-              sprintf(str,"Simulation (%s)",par->simDataName[j]);
-              gnuplot_plot_xy(handle, x[i], ysim[j][i], par->endCh[i]-par->startCh[i]+1, str);
+              sprintf(str,"Simulation (%s)",p->simDataName[j]);
+              gnuplot_plot_xy(handle, x[i], ysim[j][i], p->endCh[i]-p->startCh[i]+1, str);
             }
-          if((par->numSimData>1)||(par->addBackground>=1))//plot sum
+          if((p->numSimData>1)||(p->addBackground>=1))//plot sum
             {
               gnuplot_setcolor(handle, "black");
-              gnuplot_plot_xy(handle, x[i], ysimsum[i], par->endCh[i]-par->startCh[i]+1, "Simulation and Background(sum)");
+              gnuplot_plot_xy(handle, x[i], ysimsum[i], p->endCh[i]-p->startCh[i]+1, "Simulation and Background(sum)");
               gnuplot_unsetcolor(handle);
             }
         }
       else //simple plot
-        gnuplot_plot_xy(handle, x[i], ysimsum[i], par->endCh[i]-par->startCh[i]+1, "Simulation and Background(sum)");
-      if(i!=par->numSpectra-1)//check whether we're showing the last plot
-        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to continue...", par->spectrum[i],par->startCh[i],par->endCh[i]);
+        gnuplot_plot_xy(handle, x[i], ysimsum[i], p->endCh[i]-p->startCh[i]+1, "Simulation and Background(sum)");
+      if(i!=p->numSpectra-1)//check whether we're showing the last plot
+        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to continue...", p->spectrum[i],p->startCh[i],p->endCh[i]);
       else
-        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to exit.", par->spectrum[i],par->startCh[i],par->endCh[i]);
+        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to exit.", p->spectrum[i],p->startCh[i],p->endCh[i]);
       getc(stdin);
       gnuplot_resetplot(handle);
     }

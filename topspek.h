@@ -30,13 +30,13 @@ typedef struct
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
   int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
   double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
-}pc_par; //parameters for peak comparison (from parameter file)
+}par; //parameters for peak comparison (from parameter file)
 
 typedef struct
 {
   double scaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
   long double bgA[NSPECT],bgB[NSPECT],bgC[NSPECT];//background parameters (y = A + B*x + C*x*x)
-}fit_par; //fit parameters
+}fitpar; //fit parameters
 
 typedef struct
 {
@@ -44,13 +44,13 @@ typedef struct
   int fittedExpHist[NSPECT][S32K];
   int simHist[NSIMDATA][NSPECT][S32K];
   int fittedSimHist[NSIMDATA][NSPECT][S32K];
-}histdata;
+}data;
 
 typedef struct
 {
   double scaledSimHist[NSIMDATA][NSPECT][S32K];
   double bgHist[NSPECT][S32K];
-}fitteddata;
+}fitdata;
 
 //global variables (umad compsci profs?)
 gnuplot_ctrl *handle;
