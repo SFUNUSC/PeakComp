@@ -24,6 +24,7 @@ typedef struct
   int addBackground;//0=no,1=lin background,2=quadratic background
   int fitAddBackground[NSPECT];
   int peakSearch;//0=no,1=yes
+  int peakSearchWidth;//width of the window to set around the peak found by peak search, in channels 
   int plotOutput;//0=no,1=yes,2=detailed
   int saveOutput;//0=no,1=yes
   int verbose;//0=normal,-1=only output chisq value, no plots or other stats

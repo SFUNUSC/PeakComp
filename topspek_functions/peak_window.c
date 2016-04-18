@@ -13,6 +13,8 @@ void findFittingWindow(par * p, const data * d)
       if(p->verbose>=0)
         printf("Spectrum %i: peak found with centroid at channel %i.\n",i,(int)pfpar.centroid);
       int range=abs(pspar.searchMax-pspar.searchMin);
+      if(p->peakSearchWidth>0)
+        range=p->peakSearchWidth;
       p->startCh[i]=pfpar.centroid-(int)(range/2);
       p->endCh[i]=pfpar.centroid+(int)(range/2);
     }

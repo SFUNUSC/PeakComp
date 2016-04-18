@@ -1,6 +1,7 @@
 EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
 ADD_BACKGROUND              quad
 PEAK_SEARCH                 no
+PEAK_SEARCH_SET_WINDOW      60
 PLOT_OUTPUT                 yes
 SAVE_OUTPUT                 yes
 VERBOSITY                   normal
@@ -32,6 +33,9 @@ quad: Add a quadratic/parabolic background to the simulated data.
 PEAK_SEARCH
 no: Data will be fit over the specified channel range.
 yes: The program will search for a peak in the experiment data over the specified channel range, and shift the fit channel range to be centered on that peak.
+
+PEAK_SEARCH_SET_WINDOW
+If using PEAK_SEARCH, this option can be used to specify the window size (number of channels of data) to fit around each found peak. 
 
 PLOT_OUTPUT
 no: Show chisq stats only.

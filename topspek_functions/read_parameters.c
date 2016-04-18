@@ -81,6 +81,10 @@ void readParFile(const char * fileName, par * p)
                   else
                     p->peakSearch=0;
                 }
+              if(strcmp(str1,"PEAK_SEARCH_SET_WINDOW")==0)
+                {
+                  sscanf(str2,"%i",&p->peakSearchWidth);
+                }
               if(strcmp(str1,"PLOT_OUTPUT")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -151,8 +155,12 @@ void readParFile(const char * fileName, par * p)
         for(index=0;index<p->numSpectra;index++)
           printf("Will compare spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);
       else
-        for(index=0;index<p->numSpectra;index++)
-          printf("Will search for a peak in spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);
+        {
+          for(index=0;index<p->numSpectra;index++)
+            printf("Will search for a peak in spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);
+          if(p->peakSearchWidth>0)
+            printf("Will set fitting window width to %i channels around each peak found.\n",p->peakSearchWidth);
+        }
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
       if(p->addBackground==1)
