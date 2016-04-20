@@ -68,8 +68,10 @@ void readParFile(const char * fileName, par * p)
               if(strcmp(str1,"ADD_BACKGROUND")==0)
                 {
                   if(strcmp(str2,"quad")==0)
-                    p->addBackground=2;
+                    p->addBackground=3;
                   else if((strcmp(str2,"yes")==0)||(strcmp(str2,"lin")==0))
+                    p->addBackground=2;
+                  else if(strcmp(str2,"const")==0)
                     p->addBackground=1;
                   else
                     p->addBackground=0;
@@ -137,6 +139,12 @@ void readParFile(const char * fileName, par * p)
   
   if(p->addBackground==1)
     for(index=0;index<p->numSpectra;index++)
+      {
+        p->fixedBGPar[index][1]=0;
+        p->fixedBGPar[index][2]=0;
+      }
+  if(p->addBackground==2)
+    for(index=0;index<p->numSpectra;index++)
       p->fixedBGPar[index][2]=0;
   
   //print parameters read from the file
@@ -164,14 +172,20 @@ void readParFile(const char * fileName, par * p)
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
       if(p->addBackground==1)
-        printf("Will add a linear background to simulated data.\n");
+        printf("Will add a constant background to simulated data.\n");
       if(p->addBackground==2)
+        printf("Will add a linear background to simulated data.\n");
+      if(p->addBackground==3)
         printf("Will add a quadratic background to simulated data.\n");
       if(p->addBackground==1)
         for(index=0;index<p->numSpectra;index++)
           if(p->fixBG[index]==1)
-            printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->fixedBGPar[index][1],p->spectrum[index],p->startCh[index],p->endCh[index]);
+            printf("Fixing background amplitude to %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->spectrum[index],p->startCh[index],p->endCh[index]);
       if(p->addBackground==2)
+        for(index=0;index<p->numSpectra;index++)
+          if(p->fixBG[index]==1)
+            printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->fixedBGPar[index][1],p->spectrum[index],p->startCh[index],p->endCh[index]);
+      if(p->addBackground==3)
         for(index=0;index<p->numSpectra;index++)
           if(p->fixBG[index]==1)
             printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->fixedBGPar[index][1],p->fixedBGPar[index][2],p->spectrum[index],p->startCh[index],p->endCh[index]);

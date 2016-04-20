@@ -27,6 +27,7 @@ Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
+const: Add a constant (linear, slope = 0) background to the simulated data.
 lin: Add a linear background to the simulated data.
 quad: Add a quadratic/parabolic background to the simulated data.
 

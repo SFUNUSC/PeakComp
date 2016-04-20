@@ -24,7 +24,7 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
       numFittedParameters[i] = p->numFittedSimData;
       if(p->fixBG[i]==0)
         if(p->addBackground>=1)
-          numFittedParameters[i] += p->addBackground + 1;
+          numFittedParameters[i] += p->addBackground;
       sumFittedParameters+=numFittedParameters[i];
     }
   

@@ -49,18 +49,26 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
             for (j=p->startCh[i];j<=p->endCh[i];j++)
               if(d->expHist[p->spectrum[i]][j]!=0)
                 {
+                  sum1+=1./((double)d->expHist[p->spectrum[i]][j]);
+                  for (k=0;k<p->numFittedSimData;k++)
+                    s_sum[k]+=d->fittedSimHist[k][p->spectrum[i]][j]/((double)d->expHist[p->spectrum[i]][j]);
+                }
+          if(p->fitAddBackground[i]>=2)
+            for (j=p->startCh[i];j<=p->endCh[i];j++)
+              if(d->expHist[p->spectrum[i]][j]!=0)
+                {
                   ind=(long double)j;  
                   mi_sum+=d->fittedExpHist[p->spectrum[i]][j]*ind/((double)d->expHist[p->spectrum[i]][j]);
                   i_sum+=ind/((double)d->expHist[p->spectrum[i]][j]);
                   ii_sum+=ind*ind/((double)d->expHist[p->spectrum[i]][j]);
-                  sum1+=1./((double)d->expHist[p->spectrum[i]][j]);
+                  //sum1+=1./((double)d->expHist[p->spectrum[i]][j]);
                   for (k=0;k<p->numFittedSimData;k++)
                     {
-                      s_sum[k]+=d->fittedSimHist[k][p->spectrum[i]][j]/((double)d->expHist[p->spectrum[i]][j]);
+                      //s_sum[k]+=d->fittedSimHist[k][p->spectrum[i]][j]/((double)d->expHist[p->spectrum[i]][j]);
                       si_sum[k]+=d->fittedSimHist[k][p->spectrum[i]][j]*ind/((double)d->expHist[p->spectrum[i]][j]);
                     }
                 }
-          if(p->fitAddBackground[i]>=2)
+          if(p->fitAddBackground[i]>=3)
             for (j=p->startCh[i];j<=p->endCh[i];j++)
               if(d->expHist[p->spectrum[i]][j]!=0)
                 {
@@ -73,7 +81,7 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
                 }
           
           //construct system of equations (matrix/vector entries) 
-          if(p->fitAddBackground[i]==0)
+          if(p->fitAddBackground[i]==0)//no background
             {
               linEq.dim=p->numFittedSimData;
               for (j=0;j<p->numFittedSimData;j++)
@@ -82,7 +90,30 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 linEq.vector[j]=ms_sum[j];
             }
-          else if(p->fitAddBackground[i]==1)
+          else if(p->fitAddBackground[i]==1)//constant background
+            {
+              linEq.dim=p->numFittedSimData+1;
+              
+              //top-left entry
+              linEq.matrix[0][0]=sum1;
+              
+              //regular simulated data entires (bottom-right)
+              for (j=0;j<p->numFittedSimData;j++)
+                for (k=0;k<p->numFittedSimData;k++)
+                  linEq.matrix[1+j][1+k]=ss_sum[j][k];
+              
+              //remaining entires
+              for (j=0;j<p->numFittedSimData;j++)
+                {     
+                  linEq.matrix[0][1+j]=s_sum[j];
+                  linEq.matrix[1+j][0]=s_sum[j];
+                }
+              
+              linEq.vector[0]=m_sum;
+              for (j=0;j<p->numFittedSimData;j++)
+                linEq.vector[j+1]=ms_sum[j];
+            }
+          else if(p->fitAddBackground[i]==2)//linear background
             {
               linEq.dim=p->numFittedSimData+2;
               
@@ -111,7 +142,7 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 linEq.vector[j+2]=ms_sum[j];
             }
-          else if(p->fitAddBackground[i]==2)
+          else if(p->fitAddBackground[i]==3)//quadratic background
             {
               linEq.dim=p->numFittedSimData+3;
               
@@ -170,12 +201,20 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
           else if(p->fitAddBackground[i]==1)
             {
               fp->bgA[i]=linEq.solution[0];
+              fp->bgB[i]=0.;
+              fp->bgC[i]=0.;
+              for (j=0;j<p->numFittedSimData;j++)
+                fittedScaleFactor[j][i]=linEq.solution[j+1];
+            }
+          else if(p->fitAddBackground[i]==2)
+            {
+              fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=linEq.solution[1];
               fp->bgC[i]=0.;
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+2];
             }
-          else if(p->fitAddBackground[i]==2)
+          else if(p->fitAddBackground[i]==3)
             {
               fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=linEq.solution[1];
@@ -219,12 +258,12 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
   for (i=0;i<p->numSimData;i++)
     if(p->fixBG[i]==1)
       {
-        if(p->addBackground>=1)
+        if(p->addBackground>=2)
           {
             fp->bgA[i]=p->fixedBGPar[i][0];
             fp->bgB[i]=p->fixedBGPar[i][1];
           }
-        if(p->addBackground>=2)
+        if(p->addBackground>=3)
           {
             fp->bgC[i]=p->fixedBGPar[i][2];
           }
@@ -241,12 +280,16 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
           if(p->addBackground==0)
             printf("Spectrum %i, channel %i to %i:\n",p->spectrum[i],p->startCh[i],p->endCh[i]);
           else if((p->addBackground==1)&&(p->fitAddBackground[i]==p->addBackground))
-            printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i]);
+            printf("Spectrum %i, channel %i to %i:\nFit constant background of amplitude A = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i]);
           else if(p->addBackground==1)
-            printf("Spectrum %i, channel %i to %i:\nUsing linear background of form [A + B*channel],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED]\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i]);
+            printf("Spectrum %i, channel %i to %i:\nUsing constant background of amplitude A = %0.5LE [FIXED]\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i]);
           else if((p->addBackground==2)&&(p->fitAddBackground[i]==p->addBackground))
-            printf("Spectrum %i, channel %i to %i:\nFit quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE, B = %0.5LE, C = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i],fp->bgC[i]);
+            printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i]);
           else if(p->addBackground==2)
+            printf("Spectrum %i, channel %i to %i:\nUsing linear background of form [A + B*channel],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED]\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i]);
+          else if((p->addBackground==3)&&(p->fitAddBackground[i]==p->addBackground))
+            printf("Spectrum %i, channel %i to %i:\nFit quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE, B = %0.5LE, C = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i],fp->bgC[i]);
+          else if(p->addBackground==3)
             printf("Spectrum %i, channel %i to %i:\nUsing quadratic background of form [A + B*channel + C*(channel^2)],\nA = %0.5LE [FIXED], B = %0.5LE [FIXED], C = %0.5LE [FIXED]\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i],fp->bgC[i]);
           for (j=0;j<p->numSimData;j++)
             {
