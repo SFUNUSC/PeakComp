@@ -1,52 +1,69 @@
 EXPERIMENT_DATA             Ring_ECalABSuppSum0p2a.mca
-ADD_BACKGROUND              yes
+ADD_BACKGROUND              quad
+PEAK_SEARCH                 no
+PEAK_SEARCH_SET_WINDOW      60
 PLOT_OUTPUT                 yes
-PLOT_STYLE                  lin
 SAVE_OUTPUT                 yes
+VERBOSITY                   normal
 
 SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
 test.mca          no            1
 test2.mca         no            1
 
-SPECTRUM  START_CHANNEL END_CHANNEL
-3         5500          6000
-4         5600          6100
-5         5700          6200
-6         5800          6300
+SPECTRUM  START_CHANNEL END_CHANNEL FIX_BACKGROUND  BACKGROUND_PAR
+3         5500          6000        no              4.58171E+03 -1.29663E+01 9.29144E-03
+4         5600          6100        no              4.58171E+03 -1.29663E+01
+5         5700          6200        no              4.58171E+03 -1.29663E+01 9.29144E-03
+6         5800          6300        no              4.58171E+03
 
 <---END_OF_PARAMETERS--->
 
-This is a parameter file for the peak comparison code.  The code will analyze and compare data in the two specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
+This is a parameter file for the topspek code.  The code will analyze and compare data in the specified .mca files, in the specified range of spectra and channels.  If you change the format of the file, prepare for unforeseen consequences.
 
-Parameters and their descriptions follow:
+Parameters and their descriptions follow.  If a parameter is not specified, the program will attempt to use a default value if availiable.
 
 EXPERIMENT_DATA
 Contains the path to the .mca file containing experiment data.
 
 ADD_BACKGROUND
 no: Don't add any background.
-yes: Add a linear background to the simulated data.
+const: Add a constant (linear, slope = 0) background to the simulated data.
+lin: Add a linear background to the simulated data.
+quad: Add a quadratic/parabolic background to the simulated data.
+
+PEAK_SEARCH
+no: Data will be fit over the specified channel range.
+yes: The program will search for a peak in the experiment data over the specified channel range, and shift the fit channel range to be centered on that peak.
+
+PEAK_SEARCH_SET_WINDOW
+If using PEAK_SEARCH, this option can be used to specify the window size (number of channels of data) to fit around each found peak. 
 
 PLOT_OUTPUT
 no: Show chisq stats only.
 yes: Show a plot of the simulated and experimental data alongside chisq stats.
 detailed: Same as 'yes', except plot all simulated datasets and background as well.
 
-PLOT_STYLE
-Doesn't do anything if plotting is disabled.
-lin: Plot with linear scale on both axes.
-log: Plot with log scale on the y axis.
-
 SAVE_OUTPUT
 yes: Save fitted simulation data to mca files.  Filenames are fit_background.mca (background data), fit_simN.mca, where N is a number corresponding to each simulated data set.
 no: Don't save fitted simulation data.
 
+VERBOSITY
+normal: Print various information when running the program (default).
+chisq: Don't show any plots and only print the reduced chisq value of the fit (if fitting is successful).  Useful for interfacing the program with shell scripts.
+
 SIMULATED_DATA
 Contains the path(s) to the .mca file(s) containing simulated data.  Multiple datasets may be specified, each on a separate line.
-FIX_SCALING
+FIX_SCALING (optional)
 no: The specified data will be fit via chisq minimization to find its scaling factor.
 yes: The specified data will be scaled by the value specified under SCALING_VALUE, rather than the value obtained by chisq minimization (other scaling factors will still be determined via chisq minimization).
 rel: The specified data will be scaled by the value specified under SCALING_VALUE, relative to the scaling factor of the previous dataset (if there is no previous dataset, the scaling will be set to 0).
+SCALING_VALUE (optional)
+The value to scale the specified data by.
 
 SPECTRUM  START_CHANNEL END_CHANNEL
-Contains a list of the spectra to analyze in the experiment and simulated data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
+Contains a list of the simulated spectra to analyze against the experiment data, along with the channel range to analyze.  Multiple spectra may be specified, each on a separate line.
+FIX_BACKGROUND (optional)
+no: Allow background to be fit (default).
+yes: Fix background to the parameters specified under BACKGROUND_PAR.
+BACKGROUND_PAR (optional)
+Up to 3 parameters, separated by spaces, specifying the background parameters.  First parameter is constant, second is linear, third is quadratic.  All are 0 by default.
