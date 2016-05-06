@@ -24,8 +24,6 @@ To run the program from anywhere, move the resulting 'topspek' executable to any
 Tested and working using gcc and GNU make on Ubuntu 14.04 and Scientific Linux/CentOS 6.  Should work on more or less any Linux distro.
 
 
-CONTRIBUTIONS
+ACKNOWLEDGEMENTS
 
-J. Williams - core logic
-K. Starosta - linear equation solver code for determining fit parameter values
-N. Devillard - public domain gnuplot_i library for displaying plots
+This program uses the public domain gnuplot_i library by N. Devillard for displaying plots.
