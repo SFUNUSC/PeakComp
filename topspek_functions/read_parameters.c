@@ -87,6 +87,13 @@ void readParFile(const char * fileName, par * p)
                 {
                   sscanf(str2,"%i",&p->peakSearchWidth);
                 }
+              if(strcmp(str1,"COMMON_SCALING")==0)
+                {
+                  if(strcmp(str2,"yes")==0)
+                    p->commonScaling=1;
+                  else
+                    p->commonScaling=0;
+                }
               if(strcmp(str1,"PLOT_OUTPUT")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -169,6 +176,8 @@ void readParFile(const char * fileName, par * p)
           if(p->peakSearchWidth>0)
             printf("Will set fitting window width to %i channels around each peak found.\n",p->peakSearchWidth);
         }
+      if(p->commonScaling==1)
+        printf("Will use common scaling and background for all spectra in each data file.\n");
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
       if(p->addBackground==1)

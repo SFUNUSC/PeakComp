@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
           for (k=0;k<S32K;k++)
             d->fittedExpHist[j][k]-=p->simDataFixedAmpValue[i]*d->simHist[i][j][k];
     }
+    
   if(p->verbose>=0) printf("Spectra read in...\n");
   
   if(p->peakSearch==1)

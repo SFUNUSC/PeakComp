@@ -27,6 +27,7 @@ typedef struct
   int peakSearchWidth;//width of the window to set around the peak found by peak search, in channels 
   int plotOutput;//0=no,1=yes,2=detailed
   int saveOutput;//0=no,1=yes
+  int commonScaling;//0=disabled,1=all spectra will have the same scaling
   int verbose;//0=normal,-1=only output chisq value, no plots or other stats
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
   int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
@@ -38,6 +39,13 @@ typedef struct
   double scaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
   long double bgA[NSPECT],bgB[NSPECT],bgC[NSPECT];//background parameters (y = A + B*x + C*x*x)
 }fitpar; //fit parameters
+
+typedef struct
+{
+  long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],
+              mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,
+              iii_sum,iiii_sum,sum1; //sums needed to construct system of equations
+}fitsum; //sums used in the fitting routine
 
 typedef struct
 {
