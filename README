@@ -4,7 +4,7 @@ Maintainer: Jonathan Williams
 
 DESCRIPTION
 
-A code for comparing peak shapes across simulated and experimental data in .mca (integer array) files.  Useful for analysis of DSAM/RDM data.
+A code for comparing peak shapes across simulated and experimental data in .mca (integer array) and .spe (radware) files.  Useful for analysis of DSAM/RDM data.
 
 A linear scaling factor will be added to the simulated data, with parameters chosen by analytically minimizing the weighted chisq goodness of fit statistic between experiment and simulation.  Multiple simulated datasets may be specified, and in this case the chisq of the sum of the datasets after scaling them individually will be minimized.  Scaling factors for a given simulated dataset may be fixed to an absolute value or a value relative to another simulated dataset's scaling factor.
 If background addition is enabled in the parameter file, a linear or quadratic background (depending on parameter choice) will also be added and taken into account during the chisq minimization procedure.
@@ -12,9 +12,11 @@ If background addition is enabled in the parameter file, a linear or quadratic b
 For a detailed example and description of how to specify parameters, see the 'sample_parameters' file.
 
 
-INPUT DATA SPEC
+INPUT DATA TYPES
 
 An .mca file is simply a 2D array of integers, with the first index denoting a spectrum number (up to 100) and the second index denoting a bin number (up to 32768).  See 'topspek_functions/save_data.c' for an example of how to write data to an .mca file.
+
+An .spe file is the data type written by radware when using the 'ws' command in gf3.
 
 
 INSTRUCTIONS

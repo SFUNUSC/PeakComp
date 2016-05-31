@@ -11,7 +11,7 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
   int numBinsUsed[NSPECT];
   int sumBinsUsed=0;
   int sumBinsSkipped=0;
-  double sumSimValue=0;
+  double sumSimValue;
   int i,j,k;
   memset(spectRedChisq,0,sizeof(spectRedChisq));
   memset(spectChisq,0,sizeof(spectChisq));

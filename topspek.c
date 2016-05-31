@@ -6,7 +6,7 @@
 #include "plotter.c"
 #include "peak_window.c"
 #include "read_parameters.c"
-#include "read_mca.c"
+#include "read_data.c"
 #include "save_data.c"
 
 int main(int argc, char *argv[])
@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
     }
     
 
-  //read in the .mca files
-  readMCA(p->expDataName,p->endSpectrum+1,d->expHist);
-  readMCA(p->expDataName,p->endSpectrum+1,d->fittedExpHist);
+  //read in the data files
+  readDataFile(p->expDataName,p->endSpectrum+1,d->expHist);
+  readDataFile(p->expDataName,p->endSpectrum+1,d->fittedExpHist);
   for (i=0;i<p->numSimData;i++) 
     {
-      readMCA(p->simDataName[i],p->endSpectrum+1,d->simHist[i]);
-      readMCA(p->simDataName[i],p->endSpectrum+1,d->fittedSimHist[i]);
+      readDataFile(p->simDataName[i],p->endSpectrum+1,d->simHist[i]);
+      readDataFile(p->simDataName[i],p->endSpectrum+1,d->fittedSimHist[i]);
     }
     
   //generate data for fitting
