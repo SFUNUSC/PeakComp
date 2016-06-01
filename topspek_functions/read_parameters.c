@@ -87,6 +87,13 @@ void readParFile(const char * fileName, par * p)
                 {
                   sscanf(str2,"%i",&p->peakSearchWidth);
                 }
+              if(strcmp(str1,"COMMON_SCALING")==0)
+                {
+                  if(strcmp(str2,"yes")==0)
+                    p->commonScaling=1;
+                  else
+                    p->commonScaling=0;
+                }
               if(strcmp(str1,"PLOT_OUTPUT")==0)
                 {
                   if(strcmp(str2,"yes")==0)
@@ -150,7 +157,14 @@ void readParFile(const char * fileName, par * p)
   //print parameters read from the file
   if(p->verbose>=0)
     {
-      printf("\nTaking experiment data from file: %s\n",p->expDataName);
+      
+      if(strcmp(p->expDataName,"")==0)
+        {
+          printf("ERROR: No experiment data file specified in the parameter file!\n");
+          exit(-1);
+        }
+      else  
+        printf("\nTaking experiment data from file: %s\n",p->expDataName);
       for(index=0;index<p->numSimData;index++)
         {
           printf("Taking simulated data from file (%i of %i): %s\n",index+1,p->numSimData,p->simDataName[index]);
@@ -169,6 +183,8 @@ void readParFile(const char * fileName, par * p)
           if(p->peakSearchWidth>0)
             printf("Will set fitting window width to %i channels around each peak found.\n",p->peakSearchWidth);
         }
+      if(p->commonScaling==1)
+        printf("Will use common scaling and background for all spectra in each data file.\n");
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
       if(p->addBackground==1)

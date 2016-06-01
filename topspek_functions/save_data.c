@@ -5,18 +5,21 @@ void saveSpectra(const par * p, const fitdata * fd)
   char str[256];
   int i,j,k;
   
-  int ***outHist=allocateArrayI3(p->numSimData,p->numSpectra,S32K); //allocate array
-  
-  if(p->verbose>=0)
-    printf("Saving scaled simulation data to output file(s)...\n");
+  //allocate output arrays
+  int ***outHist=allocateArrayI3(p->numSimData,p->numSpectra,S32K);
+  int **outBGHist=allocateArrayI2(p->numSpectra,S32K); 
   
   //construct arrays
+  for (i=0;i<p->numSimData;i++)
+    for (j=0;j<p->numSpectra;j++)
+      for (k=0;k<S32K;k++)
+        outHist[i][j][k]=(int)(fd->scaledSimHist[i][j][k]);
   for (i=0;i<p->numSpectra;i++)
     for (j=0;j<S32K;j++)
-      {
-        for (k=0;k<p->numSimData;k++)
-          outHist[k][i][j]=(int)(fd->scaledSimHist[k][p->spectrum[i]][j]);
-      }
+      outBGHist[i][j]=(int)(fd->bgHist[i][j]);
+        
+  if(p->verbose>=0)
+    printf("Saving scaled simulation data to output file(s)...\n");
 
   //save arrays to .mca files  
   if(p->addBackground>=1)
@@ -27,7 +30,7 @@ void saveSpectra(const par * p, const fitdata * fd)
           exit(-1);
         }
       for (i=0;i<p->numSpectra;i++)
-        fwrite(fd->bgHist[i],S32K*sizeof(int),1,output);
+        fwrite(outBGHist[i],S32K*sizeof(int),1,output);
       fclose(output);
     }
   for (i=0;i<p->numSimData;i++)
@@ -43,5 +46,6 @@ void saveSpectra(const par * p, const fitdata * fd)
       fclose(output);
     }
   free(outHist);
+  free(outBGHist);
   
 }
