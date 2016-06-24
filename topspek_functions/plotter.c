@@ -1,3 +1,27 @@
+//handles the gnuplot prompt
+void plotPrompt(int cont)
+{
+	int c;
+	char inp[256];
+	if(cont==0)
+ 		printf("Enter 'g' for a gnuplot prompt or press [ENTER] to exit. ");
+	else
+		printf("Enter 'g' for a gnuplot prompt or press [ENTER] to continue. ");
+	c=getc(stdin);
+	if(c=='g')
+		{
+			printf("Enter 'exit' to return from the gnuplot prompt.\n");
+			fgets(inp,256,stdin);
+			while(strcmp(inp,"exit\n")!=0)
+				{
+					gnuplot_cmd(handle,inp);
+					printf("gnuplot > ");
+					fgets(inp,256,stdin);
+				}
+		}
+	return;
+}
+
 //function handles plotting of data, using the gnuplot_i library
 void plotSpectra(const par * p, const data * d, const fitdata * fd)
 {
@@ -57,11 +81,12 @@ void plotSpectra(const par * p, const data * d, const fitdata * fd)
         }
       else //simple plot
         gnuplot_plot_xy(handle, x[i], ysimsum[i], p->endCh[i]-p->startCh[i]+1, "Simulation and Background(sum)");
+      
+      printf("Showing plot for spectrum %i, channel %i to %i.\n", p->spectrum[i],p->startCh[i],p->endCh[i]);
       if(i!=p->numSpectra-1)//check whether we're showing the last plot
-        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to continue...", p->spectrum[i],p->startCh[i],p->endCh[i]);
+      	plotPrompt(1);
       else
-        printf("Showing plot for spectrum %i, channel %i to %i.  Press [ENTER] to exit.", p->spectrum[i],p->startCh[i],p->endCh[i]);
-      getc(stdin);
+      	plotPrompt(0);
       gnuplot_resetplot(handle);
     }
   gnuplot_close(handle);
