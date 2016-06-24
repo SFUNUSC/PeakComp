@@ -32,6 +32,7 @@ typedef struct
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
   int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
   double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
+  double channelScaling;//value to scale all channel values specified in the parameter file by (useful for looking at the same data with different contraction factors)
 }par; //parameters for peak comparison (from parameter file)
 
 typedef struct

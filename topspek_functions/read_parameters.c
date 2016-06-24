@@ -9,6 +9,7 @@ void readParFile(const char * fileName, par * p)
   p->maxNumCh=0;
   p->numSimData=0;
   p->numFittedSimData=0;
+  p->channelScaling=1.;
   memset(p->fixBG,0,sizeof(p->fixBG));
   if((config=fopen(fileName,"r"))==NULL)
     {
@@ -117,6 +118,13 @@ void readParFile(const char * fileName, par * p)
                   else
                     p->verbose=0;
                 }
+              if(strcmp(str1,"CHANNEL_SCALING")==0)
+                {
+                	p->channelScaling=atof(str2);
+                	if(p->channelScaling<=0.)
+                		p->channelScaling=1.;
+                }
+                
             }
           
           if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
@@ -138,6 +146,15 @@ void readParFile(const char * fileName, par * p)
   fclose(config);
   
   //correct parameters
+  if(p->channelScaling!=1.)
+  	for(index=0;index<p->numSpectra;index++)
+  		{
+  			//rescale channel ranges
+  			p->startCh[index]=(int)(p->startCh[index]*p->channelScaling);
+  			p->endCh[index]=(int)(p->endCh[index]*p->channelScaling);
+  			if((p->endCh[index]-p->startCh[index]+1)>p->maxNumCh)
+        	p->maxNumCh=p->endCh[index]-p->startCh[index]+1;
+  		}
   for(index=0;index<p->numSpectra;index++)
     if(p->fixBG[index]==0)
       p->fitAddBackground[index]=p->addBackground;
@@ -173,6 +190,8 @@ void readParFile(const char * fileName, par * p)
           if(p->simDataFixedAmp[index]==2)
             printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",p->simDataFixedAmpValue[index]);
         }
+      if(p->channelScaling!=1.)
+				printf("Channel scaling factor of %lf will be used.\n",p->channelScaling);
       if(p->peakSearch==0)
         for(index=0;index<p->numSpectra;index++)
           printf("Will compare spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);

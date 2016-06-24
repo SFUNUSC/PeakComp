@@ -5,6 +5,7 @@ PEAK_SEARCH_SET_WINDOW      60
 COMMON_SCALING              no
 PLOT_OUTPUT                 yes
 SAVE_OUTPUT                 yes
+CHANNEL_SCALING 						1.0
 VERBOSITY                   normal
 
 SIMULATED_DATA    FIX_SCALING   SCALING_VALUE
@@ -42,6 +43,9 @@ If using PEAK_SEARCH, this option can be used to specify the window size (number
 COMMON_SCALING
 no: Individual spectra in simulated data files will have their own scaling and background parameters (default).
 yes: Individual spectra in simulated data files will have the same scaling and background parameters.
+
+CHANNEL_SCALING
+Can be used to specify a factor to scale all fit window (START_CHANNEL and END_CHANNEL) values by.  This can be useful if looking at the same dataset using different contraction factors.
 
 PLOT_OUTPUT
 no: Show chisq stats only (default).
