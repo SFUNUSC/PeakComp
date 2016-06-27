@@ -122,13 +122,13 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
         {
           if(ld>=0)//has a previous dataset been fit?
             for (j=0;j<p->numSpectra;j++)
-              fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i]*fp->scaleFactor[ld][j];
+              fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i][j]*fp->scaleFactor[ld][j];
           ld=i;
         }
       else//data wasn't fit
         {
           for (j=0;j<p->numSpectra;j++)
-            fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i];
+            fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i][j];
           ld=i;
         }
     }

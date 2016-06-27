@@ -1,9 +1,43 @@
+#include "read_parameters.h"
+
+//parses a string into an option
+par_option * readOption(char * str)
+{
+	par_option *opt=(par_option*)calloc(1,sizeof(par_option));
+	char *tok;
+	tok=strtok (str,"(,)");
+	strcpy(opt->name,tok);
+	int i=0;
+	while (tok != NULL)
+	{
+		tok = strtok (NULL, "(,)");
+		if(tok!=NULL)
+			{
+				strcpy(opt->par[i],tok);
+				i++;
+				if(i>=MAX_OPT_PAR)
+					{
+						printf("WARNING: too many parameters specified in parameter file option: %s\n",opt->name);
+						break;
+					}
+			}
+	}
+	opt->numPar=i-1;
+	return (par_option*)opt;
+}
+
 //function reads parameter files for the topspek code
 void readParFile(const char * fileName, par * p) 
 {
   FILE *config;
-  char str[256],str1[256],str2[256];
-  int index=0;
+  char str[256],str1[256];
+  int i,j;
+  par_option *opt[MAX_NUM_OPT];
+  for(i=0;i<MAX_NUM_OPT;i++)
+  	opt[i]=(par_option*)malloc(sizeof(par_option));
+  int numOpt=0;
+  
+  //default values
   p->numSpectra=0;
   p->endSpectrum=0;
   p->maxNumCh=0;
@@ -11,194 +45,217 @@ void readParFile(const char * fileName, par * p)
   p->numFittedSimData=0;
   p->channelScaling=1.;
   memset(p->fixBG,0,sizeof(p->fixBG));
+  
+  //open the file and read all parameters
   if((config=fopen(fileName,"r"))==NULL)
     {
-      printf("ERROR: Cannot open the config file %s!\n",fileName);
+      printf("ERROR: Cannot open the parameter file %s!\n",fileName);
       exit(-1);
     }
   while(!(feof(config)))//go until the end of file is reached
     {
-      if(fgets(str,256,config)!=NULL)
+			if(fgets(str,256,config)!=NULL)
+				{
+					sscanf(str,"%s",str1);
+					if(strcmp(str1,"<---END_OF_PARAMETERS--->")==0)
+          	break;
+        	opt[numOpt]=readOption(str);
+        	numOpt++;
+        	if(numOpt>=MAX_NUM_OPT)
+        		{
+        			printf("ERROR: The maximum number of options (%i) in the parameter file %s has been exceeded!\nIncrease the value of MAX_NUM_OPT in read_parameters.h and recompile.\n",MAX_NUM_OPT,fileName);
+							exit(-1);
+        		}
+				}
+		}
+	fclose(config);
+	
+	//parse the parameters which were just read in
+	
+	//preprocess and deal with the spectra first (other parameters depend on this) 
+	for(i=0;i<numOpt;i++)
+		{
+			if(strcmp(opt[i]->name,"SP")==0)
+				{
+					if(opt[i]->numPar<3)
+						{
+							printf("ERROR: Not enough information was specified for one or more spectra.\n");
+							exit(-1);
+						}
+					p->spectrum[p->numSpectra]=atoi(opt[i]->par[0]);//spectrum number
+					p->startCh[p->numSpectra]=atoi(opt[i]->par[1]);//start channel
+					p->endCh[p->numSpectra]=atoi(opt[i]->par[2]);//end channel
+					if(strcmp(opt[i]->par[3],"yes")==0)
+          	p->fixBG[i]=1;//fix background
+          p->fixedBGPar[i][0]=atof(opt[i]->par[4]);
+          p->fixedBGPar[i][1]=atof(opt[i]->par[5]);
+          p->fixedBGPar[i][2]=atof(opt[i]->par[6]);
+					if(p->spectrum[p->numSpectra]>p->endSpectrum)
+						p->endSpectrum=p->spectrum[p->numSpectra];
+					if((p->endCh[p->numSpectra]-p->startCh[p->numSpectra]+1)>p->maxNumCh)
+						p->maxNumCh=p->endCh[p->numSpectra]-p->startCh[p->numSpectra]+1;
+					p->numSpectra++;
+				}
+		}
+	
+	//deal with all other parameters
+	for(i=0;i<numOpt;i++)
+		{
+			if(strcmp(opt[i]->name,"EXPERIMENT_DATA")==0)
+				{
+					strcpy(p->expDataName,opt[i]->par[0]);
+				}
+			else if(strcmp(opt[i]->name,"ADD_BACKGROUND")==0)
         {
-        
-          if(p->numSimData<NSIMDATA)
-            if(sscanf(str,"%i %i %i",&p->spectrum[index],&p->startCh[index],&p->endCh[index])!=3) //no spectrum and channel data
-              if(sscanf(str,"%s %s %lf",p->simDataName[p->numSimData],str1,&p->simDataFixedAmpValue[p->numSimData])==3) //simulated dataset info
-                {
-                  if(strcmp(str1,"yes")==0)
-                    p->simDataFixedAmp[p->numSimData]=1;
-                  else if(strcmp(str1,"rel")==0)
-                    p->simDataFixedAmp[p->numSimData]=2;
-                  else
-                    {
-                      p->simDataFixedAmp[p->numSimData]=0;
-                      strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
-                      p->numFittedSimData++;
-                    }
-                  p->numSimData++;
-                }
-              
-          if(index<NSPECT)
-            {
-              if(sscanf(str,"%i %i %i %s",&p->spectrum[index],&p->startCh[index],&p->endCh[index],str1)==3) //spectrum and channel data
-                {
-                  if(p->spectrum[index]>p->endSpectrum)
-                    p->endSpectrum=p->spectrum[index];
-                  if((p->endCh[index]-p->startCh[index]+1)>p->maxNumCh)
-                    p->maxNumCh=p->endCh[index]-p->startCh[index]+1;
-                  index++;
-                  p->numSpectra++;
-                }
-              if(sscanf(str,"%i %i %i %s %lf %lf %lf",&p->spectrum[index],&p->startCh[index],&p->endCh[index],str1,&p->fixedBGPar[index][0],&p->fixedBGPar[index][1],&p->fixedBGPar[index][2])>=5) //spectrum, channel, and background data
-                {
-                  if(p->spectrum[index]>p->endSpectrum)
-                    p->endSpectrum=p->spectrum[index];
-                  if((p->endCh[index]-p->startCh[index]+1)>p->maxNumCh)
-                    p->maxNumCh=p->endCh[index]-p->startCh[index]+1;
-                  if(strcmp(str1,"yes")==0)
-                    p->fixBG[index]=1;
-                  index++;
-                  p->numSpectra++;
-                }
-            }
-              
-          if(sscanf(str,"%s %s",str1,str2)==2) //single parameter data
-            {
-              if(strcmp(str1,"EXPERIMENT_DATA")==0)
-                strcpy(p->expDataName,str2);
-              if(strcmp(str1,"ADD_BACKGROUND")==0)
-                {
-                  if(strcmp(str2,"quad")==0)
-                    p->addBackground=3;
-                  else if((strcmp(str2,"yes")==0)||(strcmp(str2,"lin")==0))
-                    p->addBackground=2;
-                  else if(strcmp(str2,"const")==0)
-                    p->addBackground=1;
-                  else
-                    p->addBackground=0;
-                }
-              if(strcmp(str1,"PEAK_SEARCH")==0)
-                {
-                  if(strcmp(str2,"yes")==0)
-                    p->peakSearch=1;
-                  else
-                    p->peakSearch=0;
-                }
-              if(strcmp(str1,"PEAK_SEARCH_SET_WINDOW")==0)
-                {
-                  sscanf(str2,"%i",&p->peakSearchWidth);
-                }
-              if(strcmp(str1,"COMMON_SCALING")==0)
-                {
-                  if(strcmp(str2,"yes")==0)
-                    p->commonScaling=1;
-                  else
-                    p->commonScaling=0;
-                }
-              if(strcmp(str1,"PLOT_OUTPUT")==0)
-                {
-                  if(strcmp(str2,"yes")==0)
-                    p->plotOutput=1;
-                  else if(strcmp(str2,"detailed")==0)
-                    p->plotOutput=2;
-                  else
-                    p->plotOutput=0;
-                }
-              if(strcmp(str1,"SAVE_OUTPUT")==0)
-                {
-                  if(strcmp(str2,"yes")==0)
-                    p->saveOutput=1;
-                  else
-                    p->saveOutput=0;
-                }
-              if(strcmp(str1,"VERBOSITY")==0)
-                {
-                  if(strcmp(str2,"chisq")==0)
-                    p->verbose=-1;
-                  else
-                    p->verbose=0;
-                }
-              if(strcmp(str1,"CHANNEL_SCALING")==0)
-                {
-                	p->channelScaling=atof(str2);
-                	if(p->channelScaling<=0.)
-                		p->channelScaling=1.;
-                }
-                
-            }
-          
-          if(sscanf(str,"%s %s",str1,str2)==1) //listing of simulated data
-            {
-              if(strcmp(str1,"<---END_OF_PARAMETERS--->")==0)
-                break;
-              else if(strcmp(str1,"SIMULATED_DATA")!=0)
-                if(p->numSimData<NSIMDATA)
-                  {
-                    strcpy(p->simDataName[p->numSimData],str1);
-                    p->simDataFixedAmp[p->numSimData]=0;
-                    p->simDataFixedAmpValue[p->numSimData]=1.;
-                    p->numFittedSimData++;
-                    p->numSimData++;
-                  }
-            }
+          if(strcmp(opt[i]->par[0],"quad")==0)
+            p->addBackground=3;
+          else if((strcmp(opt[i]->par[0],"yes")==0)||(strcmp(opt[i]->par[0],"lin")==0))
+            p->addBackground=2;
+          else if(strcmp(opt[i]->par[0],"const")==0)
+            p->addBackground=1;
+          else
+            p->addBackground=0;
         }
-    }
-  fclose(config);
+      else if(strcmp(opt[i]->name,"PEAK_SEARCH")==0)
+        {
+          if(strcmp(opt[i]->par[0],"yes")==0)
+            p->peakSearch=1;
+          else
+            p->peakSearch=0;
+        }
+      else if(strcmp(opt[i]->name,"PEAK_SEARCH_SET_WINDOW")==0)
+        {
+          p->peakSearchWidth=atoi(opt[i]->par[0]);
+        }
+      else if(strcmp(opt[i]->name,"COMMON_SCALING")==0)
+        {
+          if(strcmp(opt[i]->par[0],"yes")==0)
+            p->commonScaling=1;
+          else
+            p->commonScaling=0;
+        }
+      else if(strcmp(opt[i]->name,"PLOT_OUTPUT")==0)
+        {
+          if(strcmp(opt[i]->par[0],"yes")==0)
+            p->plotOutput=1;
+          else if(strcmp(opt[i]->par[0],"detailed")==0)
+            p->plotOutput=2;
+          else
+            p->plotOutput=0;
+        }
+      else if(strcmp(opt[i]->name,"SAVE_OUTPUT")==0)
+        {
+          if(strcmp(opt[i]->par[0],"yes")==0)
+            p->saveOutput=1;
+          else
+            p->saveOutput=0;
+        }
+      else if(strcmp(opt[i]->name,"VERBOSITY")==0)
+        {
+          if(strcmp(opt[i]->par[0],"chisq")==0)
+            p->verbose=-1;
+          else
+            p->verbose=0;
+        }
+      else if(strcmp(opt[i]->name,"CHANNEL_SCALING")==0)
+        {
+        	p->channelScaling=atof(opt[i]->par[0]);
+        	if(p->channelScaling<=0.)
+        		p->channelScaling=1.;
+        }
+      else if(strcmp(opt[i]->name,"DATA")==0)
+        {
+        	p->simDataCommonScaling[p->numSimData]=1;
+        	strcpy(p->simDataName[p->numSimData],opt[i]->par[0]);//filename
+					
+					//set up scaling
+    			if((strcmp(opt[i]->par[1],"rel_scaling")==0)||(strcmp(opt[i]->par[1],"rel")==0))
+    				p->simDataFixedAmp[p->numSimData]=2;
+    			else if((strcmp(opt[i]->par[1],"abs_scaling")==0)||(strcmp(opt[i]->par[1],"abs")==0))
+    				p->simDataFixedAmp[p->numSimData]=1;
+    			else
+    				{
+							p->simDataFixedAmp[p->numSimData]=0;
+							strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
+							p->numFittedSimData++;
+    				}		
+        	if(opt[i]->numPar==3)//scaling is the same for each spectrum
+        		{
+        			for(j=0;j<p->numSpectra;j++)
+        				p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[2]);
+        		}
+        	else if(opt[i]->numPar>3)//scaling is different for each spectrum
+        		{
+        			for(j=0;j<p->numSpectra;j++)
+        				if(j+2<MAX_OPT_PAR)
+        					p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[j+2]);
+        			p->simDataCommonScaling[p->numSimData]=0;
+        		}
+        	p->numSimData++;
+        }
+		}
   
   //correct parameters
   if(p->channelScaling!=1.)
-  	for(index=0;index<p->numSpectra;index++)
+  	for(i=0;i<p->numSpectra;i++)
   		{
   			//rescale channel ranges
-  			p->startCh[index]=(int)(p->startCh[index]*p->channelScaling);
-  			p->endCh[index]=(int)(p->endCh[index]*p->channelScaling);
-  			if((p->endCh[index]-p->startCh[index]+1)>p->maxNumCh)
-        	p->maxNumCh=p->endCh[index]-p->startCh[index]+1;
+  			p->startCh[i]=(int)(p->startCh[i]*p->channelScaling);
+  			p->endCh[i]=(int)(p->endCh[i]*p->channelScaling);
+  			if((p->endCh[i]-p->startCh[i]+1)>p->maxNumCh)
+        	p->maxNumCh=p->endCh[i]-p->startCh[i]+1;
   		}
-  for(index=0;index<p->numSpectra;index++)
-    if(p->fixBG[index]==0)
-      p->fitAddBackground[index]=p->addBackground;
-    else if(p->fixBG[index]==1)
-      p->fitAddBackground[index]=0;
+  for(i=0;i<p->numSpectra;i++)
+    if(p->fixBG[i]==0)
+      p->fitAddBackground[i]=p->addBackground;
+    else if(p->fixBG[i]==1)
+      p->fitAddBackground[i]=0;
   
   if(p->addBackground==1)
-    for(index=0;index<p->numSpectra;index++)
+    for(i=0;i<p->numSpectra;i++)
       {
-        p->fixedBGPar[index][1]=0;
-        p->fixedBGPar[index][2]=0;
+        p->fixedBGPar[i][1]=0;
+        p->fixedBGPar[i][2]=0;
       }
   if(p->addBackground==2)
-    for(index=0;index<p->numSpectra;index++)
-      p->fixedBGPar[index][2]=0;
+    for(i=0;i<p->numSpectra;i++)
+      p->fixedBGPar[i][2]=0;
   
   //print parameters read from the file
   if(p->verbose>=0)
     {
-      
       if(strcmp(p->expDataName,"")==0)
         {
           printf("ERROR: No experiment data file specified in the parameter file!\n");
           exit(-1);
         }
       else  
-        printf("\nTaking experiment data from file: %s\n",p->expDataName);
-      for(index=0;index<p->numSimData;index++)
+        printf("%i line(s) read from the parameter file: %s\n",numOpt,fileName);
+      for(i=0;i<p->numSimData;i++)
         {
-          printf("Taking simulated data from file (%i of %i): %s\n",index+1,p->numSimData,p->simDataName[index]);
-          if(p->simDataFixedAmp[index]==1)
-            printf("Fixing scaling factor for this data to %lf\n",p->simDataFixedAmpValue[index]);
-          if(p->simDataFixedAmp[index]==2)
-            printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",p->simDataFixedAmpValue[index]);
+          printf("Taking simulated data from file (%i of %i): %s\n",i+1,p->numSimData,p->simDataName[i]);
+          if(p->simDataFixedAmp[i]==1)
+            printf("Fixing scaling factor for this data to %lf\n",p->simDataFixedAmpValue[i][0]);
+          if(p->simDataFixedAmp[i]==2)
+          	{
+		        	if(p->simDataCommonScaling[i]==1)
+		          	printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",p->simDataFixedAmpValue[i][0]);
+		          else
+		          	{
+		          		for(j=0;j<p->numSpectra;j++)
+		          			printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data for spectrum %i.\n",p->simDataFixedAmpValue[i][j],p->spectrum[j]);
+		          	}
+            }
         }
       if(p->channelScaling!=1.)
 				printf("Channel scaling factor of %lf will be used.\n",p->channelScaling);
       if(p->peakSearch==0)
-        for(index=0;index<p->numSpectra;index++)
-          printf("Will compare spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);
+        for(i=0;i<p->numSpectra;i++)
+          printf("Will compare spectrum %i from channels %i to %i.\n",p->spectrum[i],p->startCh[i],p->endCh[i]);
       else
         {
-          for(index=0;index<p->numSpectra;index++)
-            printf("Will search for a peak in spectrum %i from channels %i to %i.\n",p->spectrum[index],p->startCh[index],p->endCh[index]);
+          for(i=0;i<p->numSpectra;i++)
+            printf("Will search for a peak in spectrum %i from channels %i to %i.\n",p->spectrum[i],p->startCh[i],p->endCh[i]);
           if(p->peakSearchWidth>0)
             printf("Will set fitting window width to %i channels around each peak found.\n",p->peakSearchWidth);
         }
@@ -213,17 +270,17 @@ void readParFile(const char * fileName, par * p)
       if(p->addBackground==3)
         printf("Will add a quadratic background to simulated data.\n");
       if(p->addBackground==1)
-        for(index=0;index<p->numSpectra;index++)
-          if(p->fixBG[index]==1)
-            printf("Fixing background amplitude to %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->spectrum[index],p->startCh[index],p->endCh[index]);
+        for(i=0;i<p->numSpectra;i++)
+          if(p->fixBG[i]==1)
+            printf("Fixing background amplitude to %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[i][0],p->spectrum[i],p->startCh[i],p->endCh[i]);
       if(p->addBackground==2)
-        for(index=0;index<p->numSpectra;index++)
-          if(p->fixBG[index]==1)
-            printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->fixedBGPar[index][1],p->spectrum[index],p->startCh[index],p->endCh[index]);
+        for(i=0;i<p->numSpectra;i++)
+          if(p->fixBG[i]==1)
+            printf("Fixing background parameters to A = %lf, B = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[i][0],p->fixedBGPar[i][1],p->spectrum[i],p->startCh[i],p->endCh[i]);
       if(p->addBackground==3)
-        for(index=0;index<p->numSpectra;index++)
-          if(p->fixBG[index]==1)
-            printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[index][0],p->fixedBGPar[index][1],p->fixedBGPar[index][2],p->spectrum[index],p->startCh[index],p->endCh[index]);
+        for(i=0;i<p->numSpectra;i++)
+          if(p->fixBG[i]==1)
+            printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[i][0],p->fixedBGPar[i][1],p->fixedBGPar[i][2],p->spectrum[i],p->startCh[i],p->endCh[i]);
       if(p->plotOutput==0)
         printf("Will not plot output data.\n");
       if(p->plotOutput==1)
