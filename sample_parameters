@@ -3,6 +3,7 @@ ADD_BACKGROUND(quad)
 PEAK_SEARCH(no)
 PEAK_SEARCH_SET_WINDOW(60)
 COMMON_SCALING(no)
+FORCE_POSITIVE_SCALING(no)
 PLOT_OUTPUT(yes)
 SAVE_OUTPUT(yes)
 CHANNEL_SCALING(1.0)
@@ -41,6 +42,10 @@ If using PEAK_SEARCH, this option can be used to specify the window size (number
 COMMON_SCALING(value)
 no: Individual spectra in simulated data files will have their own scaling and background parameters (default).
 yes: Individual spectra in simulated data files will have the same scaling and background parameters.
+
+FORCE_POSITIVE_SCALING(value)
+no: Scaling parameters for simulated data may be negative values (default).
+yes: Scaling parameters for simulated data will be forced to a value of 0 or higher.
 
 CHANNEL_SCALING(value)
 Can be used to specify a factor to scale all fit window (channel ranges) values by.  This can be useful if looking at the same dataset using different contraction factors.

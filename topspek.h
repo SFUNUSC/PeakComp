@@ -34,6 +34,7 @@ typedef struct
   double simDataFixedAmpValue[NSIMDATA][NSPECT];//value at which amplitude is fixed for each set of simulated data and each spectrum
   int simDataCommonScaling[NSIMDATA];//bool specifying whether scaling is common to each spectrum
   double channelScaling;//value to scale all channel values specified in the parameter file by (useful for looking at the same data with different contraction factors)
+  int forcePositiveS;//1=scaling factors in fit will be forced to be positive
 }par; //parameters for peak comparison (from parameter file)
 
 typedef struct

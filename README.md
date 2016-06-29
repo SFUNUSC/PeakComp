@@ -1,4 +1,5 @@
 **TopSpek** (A peak comparison and spectral decomposition tool)
+
 Maintainer: Jonathan Williams
 
 
@@ -31,7 +32,7 @@ An .spe file is the data type written by radware when using the 'ws' command in 
 
 Use 'make' to compile.  Optional data plotting requires gnuplot to be installed.
 To run the program from anywhere, move the resulting 'topspek' executable to any directory under your $PATH environment variable.
-Tested using gcc and GNU make on Ubuntu 14.04, Scientific Linux/CentOS 6, and Arch Linux (as of June 2016).  Should work on more or less any Linux distro.
+Tested using gcc and GNU make on Ubuntu 14.04, Scientific Linux/CentOS 6, and Arch Linux (as of July 2016).  Should work on more or less any Linux distro.
 
 
 *Acknowledgments*

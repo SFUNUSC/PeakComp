@@ -105,6 +105,15 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
     printf("NOTE: All scaling parameters are fixed, no chisq minimzation was performed.\n\n");
   
   free(fs);
+  
+  //constrain fit values as specified by parameters
+  if(p->forcePositiveS==1)//force positive scaling factors
+  	{
+  		for (i=0;i<p->numSpectra;i++)
+  			for (j=0;j<p->numFittedSimData;j++)
+  				if(fittedScaleFactor[j][i]<0.)
+  					fittedScaleFactor[j][i]=0;
+  	}	
     
   //generate scaling factors for all spectra, including those that weren't fitted
   int fd=0;//counter for number of datasets which have fit (not fixed amplitude)
@@ -376,4 +385,5 @@ void solveFitEq(const par * p, const data * d, const fitsum * fs, const int spec
         }
       exit(-1);
     }
+
 }

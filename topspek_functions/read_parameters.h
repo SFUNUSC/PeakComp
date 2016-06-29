@@ -1,8 +1,8 @@
 #ifndef RP_H
 #define RP_H
 
-#define MAX_OPT_PAR      9
-#define MAX_NUM_OPT      100
+#define MAX_OPT_PAR      100
+#define MAX_NUM_OPT      200
 
 //structure defining optional parameters to be read in from the parameter file
 typedef struct

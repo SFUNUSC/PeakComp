@@ -163,6 +163,13 @@ void readParFile(const char * fileName, par * p)
         	if(p->channelScaling<=0.)
         		p->channelScaling=1.;
         }
+      else if(strcmp(opt[i]->name,"FORCE_POSITIVE_SCALING")==0)
+        {
+        	if(strcmp(opt[i]->par[0],"yes")==0)
+            p->forcePositiveS=1;
+          else
+            p->forcePositiveS=0;
+        }
       else if(strcmp(opt[i]->name,"DATA")==0)
         {
         	p->simDataCommonScaling[p->numSimData]=1;
@@ -261,6 +268,8 @@ void readParFile(const char * fileName, par * p)
         }
       if(p->commonScaling==1)
         printf("Will use common scaling and background for all spectra in each data file.\n");
+      if(p->forcePositiveS==1)
+      	printf("Will force scaling factors to positive values when fiting.\n");
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
       if(p->addBackground==1)
