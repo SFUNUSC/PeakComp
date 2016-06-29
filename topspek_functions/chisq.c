@@ -53,7 +53,11 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
       chisq+=spectChisq[i];
       spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters[i]-1);
     }
-  redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
+  if(p->indSpectra==0)
+  	redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
+  else
+  	for (i=0;i<p->numSpectra;i++)
+  		redChisq+=spectRedChisq[i];
   
   //print output
   if(p->verbose>=0)

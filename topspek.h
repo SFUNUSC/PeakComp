@@ -35,6 +35,7 @@ typedef struct
   int simDataCommonScaling[NSIMDATA];//bool specifying whether scaling is common to each spectrum
   double channelScaling;//value to scale all channel values specified in the parameter file by (useful for looking at the same data with different contraction factors)
   int forcePositiveS;//1=scaling factors in fit will be forced to be positive
+  int indSpectra;//bool specifying whether spectra are independent measurements (for total chisq calculation)
 }par; //parameters for peak comparison (from parameter file)
 
 typedef struct

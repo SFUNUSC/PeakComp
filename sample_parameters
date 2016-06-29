@@ -4,6 +4,7 @@ PEAK_SEARCH(no)
 PEAK_SEARCH_SET_WINDOW(60)
 COMMON_SCALING(no)
 FORCE_POSITIVE_SCALING(no)
+INDEPENDENT_SP(yes)
 PLOT_OUTPUT(yes)
 SAVE_OUTPUT(yes)
 CHANNEL_SCALING(1.0)
@@ -46,6 +47,10 @@ yes: Individual spectra in simulated data files will have the same scaling and b
 FORCE_POSITIVE_SCALING(value)
 no: Scaling parameters for simulated data may be negative values (default).
 yes: Scaling parameters for simulated data will be forced to a value of 0 or higher.
+
+INDEPENDENT_SP(value)
+no: Individual spectra specified using the SP command will not be treated as independent measurements (calculated total reduced chisq value will treat all spectra as part of one set of data) (default).
+yes: Individual spectra specified using the SP command will be treated as independent measurements (calculated total reduced chisq value will be the sum of the values calculated for each spectrum).
 
 CHANNEL_SCALING(value)
 Can be used to specify a factor to scale all fit window (channel ranges) values by.  This can be useful if looking at the same dataset using different contraction factors.

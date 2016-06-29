@@ -170,6 +170,13 @@ void readParFile(const char * fileName, par * p)
           else
             p->forcePositiveS=0;
         }
+      else if(strcmp(opt[i]->name,"INDEPENDENT_SP")==0)
+        {
+        	if(strcmp(opt[i]->par[0],"yes")==0)
+            p->indSpectra=1;
+          else
+            p->indSpectra=0;
+        }
       else if(strcmp(opt[i]->name,"DATA")==0)
         {
         	p->simDataCommonScaling[p->numSimData]=1;
@@ -290,6 +297,8 @@ void readParFile(const char * fileName, par * p)
         for(i=0;i<p->numSpectra;i++)
           if(p->fixBG[i]==1)
             printf("Fixing background parameters to A = %lf, B = %lf, C = %lf for spectrum %i, channels %i to %i.\n",p->fixedBGPar[i][0],p->fixedBGPar[i][1],p->fixedBGPar[i][2],p->spectrum[i],p->startCh[i],p->endCh[i]);
+      if(p->indSpectra==1)
+      	printf("Will treat spectra as independent measurements for reduced chisq calculation.\n");
       if(p->plotOutput==0)
         printf("Will not plot output data.\n");
       if(p->plotOutput==1)
