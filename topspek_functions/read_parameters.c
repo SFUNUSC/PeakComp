@@ -154,7 +154,9 @@ void readParFile(const char * fileName, par * p)
         }
       else if(strcmp(opt[i]->name,"VERBOSITY")==0)
         {
-          if(strcmp(opt[i]->par[0],"chisq")==0)
+          if(strcmp(opt[i]->par[0],"redchisq")==0)
+            p->verbose=-2;
+          else if(strcmp(opt[i]->par[0],"chisq")==0)
             p->verbose=-1;
           else
             p->verbose=0;

@@ -67,7 +67,8 @@ no: Don't save fitted simulation data.
 
 VERBOSITY(value)
 normal: Print various information when running the program (default).
-chisq: Don't show any plots and only print the reduced chisq value of the fit (if fitting is successful).  Useful for interfacing the program with shell scripts.
+chisq: Don't show any plots and only print the chisq value of the fit (if fitting is successful).  Useful for interfacing the program with shell scripts.
+redchisq: Don't show any plots and only print the reduced chisq value of the fit (if fitting is successful).
 
 DATA(file_path)
 DATA(file_path, fix_scaling, scaling_arg0, scaling_arg1...)

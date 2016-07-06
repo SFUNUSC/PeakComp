@@ -74,6 +74,8 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
       printf("Reduced chisq (total): %f\n",redChisq);
     }
   else if(p->verbose==-1)
+    printf("%f\n",chisq);//only print chisq
+  else if(p->verbose==-2)
     printf("%f\n",redChisq);//only print the reduced chisq
   
 }
