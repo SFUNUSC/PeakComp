@@ -113,8 +113,10 @@ void readParFile(const char * fileName, par * p)
             p->addBackground=2;
           else if(strcmp(opt[i]->par[0],"const")==0)
             p->addBackground=1;
+          else if(strcmp(opt[i]->par[0],"const_pos")==0)
+            p->addBackground=-1;
           else
-            p->addBackground=0;
+            p->addBackground=0;//don't fit background
         }
       else if(strcmp(opt[i]->name,"PEAK_SEARCH")==0)
         {
@@ -279,12 +281,14 @@ void readParFile(const char * fileName, par * p)
       	printf("Will force scaling factors to positive values when fiting.\n");
       if(p->addBackground==0)
         printf("Will not add background to simulated data.\n");
-      if(p->addBackground==1)
+      if(abs(p->addBackground)==1)
         printf("Will add a constant background to simulated data.\n");
-      if(p->addBackground==2)
+      if(abs(p->addBackground)==2)
         printf("Will add a linear background to simulated data.\n");
-      if(p->addBackground==3)
+      if(abs(p->addBackground)==3)
         printf("Will add a quadratic background to simulated data.\n");
+      if(p->addBackground<0)
+        printf("Will force background to be positive.\n");
       if(p->addBackground==1)
         for(i=0;i<p->numSpectra;i++)
           if(p->fixBG[i]==1)

@@ -1,6 +1,6 @@
 //forward declarations
-void generateSums(const par*, const fitpar*, const data*, fitsum*, const int);
-void solveFitEq(const par*, const data*, const fitsum*, const int, lin_eq_type*);
+void generateSums(const par*, const fitpar*, const data*, fitsum*, const int, const int);
+void solveFitEq(const par*, const data*, const fitsum*, const int, const int, lin_eq_type*);
 
 //function computes background coefficients and scaling factors
 //by analytically minimizing chisq for the expression:
@@ -19,8 +19,8 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
       //generate sums over all spectra and then solve simultaneously
       memset(fs,0,sizeof(fitsum));//initialize all sums to 0
       for (i=0;i<p->numSpectra;i++)
-        generateSums(p,fp,d,fs,i);
-      solveFitEq(p,d,fs,0,&linEq);
+        generateSums(p,fp,d,fs,i,p->fitAddBackground[i]);
+      solveFitEq(p,d,fs,0,p->fitAddBackground[0],&linEq);
       
       for (i=0;i<p->numSpectra;i++)
         {
@@ -56,6 +56,27 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+3];
             }
+          else if(p->fitAddBackground[0]==-1)//constant positive background
+            {
+            	if(linEq.solution[0]<0.0)
+            		{
+            			//refit with no background
+          				solveFitEq(p,d,fs,0,0,&linEq);
+          				fp->bgA[i]=0.;
+				          fp->bgB[i]=0.;
+				          fp->bgC[i]=0.;
+				          for (j=0;j<p->numFittedSimData;j++)
+				            fittedScaleFactor[j][i]=linEq.solution[j];
+            		}
+            	else
+            		{
+				          fp->bgA[i]=linEq.solution[0];
+				          fp->bgB[i]=0.;
+				          fp->bgC[i]=0.;
+				          for (j=0;j<p->numFittedSimData;j++)
+				            fittedScaleFactor[j][i]=linEq.solution[j+1];
+                }
+            }
         }
     }
   else if(p->numFittedSimData>0)
@@ -64,10 +85,10 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
         {        
           //generate sums and solve spectrum-by-spectrum
           memset(fs,0,sizeof(fitsum));//initialize all sums to 0
-          generateSums(p,fp,d,fs,i);//generate sums for the spectrum
-          solveFitEq(p,d,fs,i,&linEq);//solve for the spectrum
+          generateSums(p,fp,d,fs,i,p->fitAddBackground[i]);//generate sums for the spectrum
+          solveFitEq(p,d,fs,i,p->fitAddBackground[i],&linEq);//solve for the spectrum
           
-          if(p->fitAddBackground[i]==0)
+          if(p->fitAddBackground[i]==0)//no background fitting
             {
               fp->bgA[i]=0.;
               fp->bgB[i]=0.;
@@ -75,7 +96,7 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j];
             }
-          else if(p->fitAddBackground[i]==1)
+          else if(p->fitAddBackground[i]==1)//constant background
             {
               fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=0.;
@@ -83,7 +104,7 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+1];
             }
-          else if(p->fitAddBackground[i]==2)
+          else if(p->fitAddBackground[i]==2)//linear background
             {
               fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=linEq.solution[1];
@@ -91,13 +112,34 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+2];
             }
-          else if(p->fitAddBackground[i]==3)
+          else if(p->fitAddBackground[i]==3)//quadratic background
             {
               fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=linEq.solution[1];
               fp->bgC[i]=linEq.solution[2];
               for (j=0;j<p->numFittedSimData;j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+3];
+            }
+          else if(p->fitAddBackground[i]==-1)//constant positive background
+            {
+            	if(linEq.solution[0]<0.0)
+            		{
+            			//refit with no background
+          				solveFitEq(p,d,fs,i,0,&linEq);//solve for the spectrum
+          				fp->bgA[i]=0.;
+				          fp->bgB[i]=0.;
+				          fp->bgC[i]=0.;
+				          for (j=0;j<p->numFittedSimData;j++)
+				            fittedScaleFactor[j][i]=linEq.solution[j];
+            		}
+							else
+								{
+						      fp->bgA[i]=linEq.solution[0];
+						      fp->bgB[i]=0.;
+						      fp->bgC[i]=0.;
+						      for (j=0;j<p->numFittedSimData;j++)
+						        fittedScaleFactor[j][i]=linEq.solution[j+1];
+		            }
             }
         }
     }
@@ -166,9 +208,9 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
         {
           if(p->addBackground==0)
             printf("Spectrum %i, channel %i to %i:\n",p->spectrum[i],p->startCh[i],p->endCh[i]);
-          else if((p->addBackground==1)&&(p->fitAddBackground[i]==p->addBackground))
+          else if((abs(p->addBackground)==1)&&(p->fitAddBackground[i]==p->addBackground))
             printf("Spectrum %i, channel %i to %i:\nFit constant background of amplitude A = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i]);
-          else if(p->addBackground==1)
+          else if(abs(p->addBackground)==1)
             printf("Spectrum %i, channel %i to %i:\nUsing constant background of amplitude A = %0.5LE [FIXED]\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i]);
           else if((p->addBackground==2)&&(p->fitAddBackground[i]==p->addBackground))
             printf("Spectrum %i, channel %i to %i:\nFit linear background of form [A + B*channel],\nA = %0.5LE, B = %0.5LE\n",p->spectrum[i],p->startCh[i],p->endCh[i],fp->bgA[i],fp->bgB[i]);
@@ -204,13 +246,13 @@ void applyBackgroundandScaling(const par * p, const fitpar * fp, const data * d,
   //generate background data
   for (i=0;i<p->numSpectra;i++)
     for (j=0;j<S32K;j++)
-      if(p->addBackground>=1)
+      if(abs(p->addBackground)>=1)
         fd->bgHist[i][j]=fp->bgA[i] + fp->bgB[i]*j + fp->bgC[i]*j*j;
 }
 
 
 //generates sums for fitting routine for the given spectrum
-void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs, const int specNum)
+void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs, const int specNum, const int bgMode)
 {
   long double ind;
   int j,k,l;
@@ -227,7 +269,7 @@ void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs,
               fs->ss_sum[k][l]+=(double)d->fittedSimHist[k][p->spectrum[specNum]][j]*(double)d->fittedSimHist[l][p->spectrum[specNum]][j]/((double)d->expHist[p->spectrum[specNum]][j]);
           }
       }
-  if(p->fitAddBackground[specNum]>=1)
+  if(abs(bgMode)>=1)
     for (j=p->startCh[specNum];j<=p->endCh[specNum];j++)
       if(d->expHist[p->spectrum[specNum]][j]!=0)
         {
@@ -235,7 +277,7 @@ void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs,
           for (k=0;k<p->numFittedSimData;k++)
             fs->s_sum[k]+=d->fittedSimHist[k][p->spectrum[specNum]][j]/((double)d->expHist[p->spectrum[specNum]][j]);
         }
-  if(p->fitAddBackground[specNum]>=2)
+  if(abs(bgMode)>=2)
     for (j=p->startCh[specNum];j<=p->endCh[specNum];j++)
       if(d->expHist[p->spectrum[specNum]][j]!=0)
         {
@@ -248,7 +290,7 @@ void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs,
               fs->si_sum[k]+=d->fittedSimHist[k][p->spectrum[specNum]][j]*ind/((double)d->expHist[p->spectrum[specNum]][j]);
             }
         }
-  if(p->fitAddBackground[specNum]>=3)
+  if(abs(bgMode)>=3)
     for (j=p->startCh[specNum];j<=p->endCh[specNum];j++)
       if(d->expHist[p->spectrum[specNum]][j]!=0)
         {
@@ -262,12 +304,12 @@ void generateSums(const par * p, const fitpar * fp, const data * d, fitsum * fs,
 }
 
 //given a set of sums, set up and solve the fit equation
-void solveFitEq(const par * p, const data * d, const fitsum * fs, const int specNum, lin_eq_type * linEq)
+void solveFitEq(const par * p, const data * d, const fitsum * fs, const int specNum, const int bgMode, lin_eq_type * linEq)
 {
   int j,k;
   
   //construct system of equations (matrix/vector entries) 
-  if(p->fitAddBackground[specNum]==0)//no background
+  if(bgMode==0)//no background
     {
       linEq->dim=p->numFittedSimData;
       for (j=0;j<p->numFittedSimData;j++)
@@ -276,7 +318,7 @@ void solveFitEq(const par * p, const data * d, const fitsum * fs, const int spec
       for (j=0;j<p->numFittedSimData;j++)
         linEq->vector[j]=fs->ms_sum[j];
     }
-  else if(p->fitAddBackground[specNum]==1)//constant background
+  else if(abs(bgMode)==1)//constant background
     {
       linEq->dim=p->numFittedSimData+1;
       
@@ -299,7 +341,7 @@ void solveFitEq(const par * p, const data * d, const fitsum * fs, const int spec
       for (j=0;j<p->numFittedSimData;j++)
         linEq->vector[j+1]=fs->ms_sum[j];
     }
-  else if(p->fitAddBackground[specNum]==2)//linear background
+  else if(abs(bgMode)==2)//linear background
     {
       linEq->dim=p->numFittedSimData+2;
       
@@ -328,7 +370,7 @@ void solveFitEq(const par * p, const data * d, const fitsum * fs, const int spec
       for (j=0;j<p->numFittedSimData;j++)
         linEq->vector[j+2]=fs->ms_sum[j];
     }
-  else if(p->fitAddBackground[specNum]==3)//quadratic background
+  else if(abs(bgMode)==3)//quadratic background
     {
       linEq->dim=p->numFittedSimData+3;
       

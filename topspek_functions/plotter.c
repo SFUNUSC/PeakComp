@@ -40,7 +40,7 @@ void plotSpectra(const par * p, const data * d, const fitdata * fd)
       {
         x[i][j-p->startCh[i]]=(double)j;
         yexp[i][j-p->startCh[i]]=(double)d->expHist[p->spectrum[i]][j];
-        if(p->addBackground>=1)
+        if(abs(p->addBackground)>=1)
           ybackground[i][j-p->startCh[i]]=fd->bgHist[i][j];
         ysimsum[i][j-p->startCh[i]]=ybackground[i][j-p->startCh[i]];
         for (k=0;k<p->numSimData;k++)
@@ -61,7 +61,7 @@ void plotSpectra(const par * p, const data * d, const fitdata * fd)
       gnuplot_plot_xy(handle, x[i], yexp[i], p->endCh[i]-p->startCh[i]+1, "Experiment");
       if(p->plotOutput>1)//detailed plot
         {
-          if(p->addBackground>=1)//plot background
+          if(abs(p->addBackground)>=1)//plot background
             {
               gnuplot_setstyle(handle,"lines"); //plot background as a line
               gnuplot_plot_xy(handle, x[i], ybackground[i], p->endCh[i]-p->startCh[i]+1, "Background");
@@ -72,7 +72,7 @@ void plotSpectra(const par * p, const data * d, const fitdata * fd)
               sprintf(str,"Simulation (%s)",p->simDataName[j]);
               gnuplot_plot_xy(handle, x[i], ysim[j][i], p->endCh[i]-p->startCh[i]+1, str);
             }
-          if((p->numSimData>1)||(p->addBackground>=1))//plot sum
+          if((p->numSimData>1)||(abs(p->addBackground)>=1))//plot sum
             {
               gnuplot_setcolor(handle, "black");
               gnuplot_plot_xy(handle, x[i], ysimsum[i], p->endCh[i]-p->startCh[i]+1, "Simulation and Background(sum)");
