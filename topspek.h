@@ -30,8 +30,12 @@ typedef struct
   int commonScaling;//0=disabled,1=all spectra will have the same scaling
   int verbose;//0=normal,-1=only output chisq value, no plots or other stats
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
-  int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed
-  double simDataFixedAmpValue[NSIMDATA];//value at which amplitude is fixed for each set of simulated data
+  int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed,1=fixed scaline,2=relative scaling
+  double simDataFixedAmpValue[NSIMDATA][NSPECT];//value at which amplitude is fixed for each set of simulated data and each spectrum
+  int simDataCommonScaling[NSIMDATA];//bool specifying whether scaling is common to each spectrum
+  double channelScaling;//value to scale all channel values specified in the parameter file by (useful for looking at the same data with different contraction factors)
+  int forcePositiveS;//1=scaling factors in fit will be forced to be positive
+  int indSpectra;//bool specifying whether spectra are independent measurements (for total chisq calculation)
 }par; //parameters for peak comparison (from parameter file)
 
 typedef struct

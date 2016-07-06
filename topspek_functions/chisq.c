@@ -23,8 +23,8 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
     {
       numFittedParameters[i] = p->numFittedSimData;
       if(p->fixBG[i]==0)
-        if(p->addBackground>=1)
-          numFittedParameters[i] += p->addBackground;
+        if(abs(p->fitAddBackground[i])>=1)
+          numFittedParameters[i] += abs(p->fitAddBackground[i]);
       sumFittedParameters+=numFittedParameters[i];
     }
   
@@ -53,7 +53,11 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
       chisq+=spectChisq[i];
       spectRedChisq[i]=spectChisq[i]/(numBinsUsed[i]-numFittedParameters[i]-1);
     }
-  redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
+  if(p->indSpectra==0)
+  	redChisq=chisq/(sumBinsUsed-sumFittedParameters-1);
+  else
+  	for (i=0;i<p->numSpectra;i++)
+  		redChisq+=spectRedChisq[i];
   
   //print output
   if(p->verbose>=0)
@@ -70,6 +74,8 @@ void compareSpectra(const par * p, const data * d, const fitdata * fd)
       printf("Reduced chisq (total): %f\n",redChisq);
     }
   else if(p->verbose==-1)
+    printf("%f\n",chisq);//only print chisq
+  else if(p->verbose==-2)
     printf("%f\n",redChisq);//only print the reduced chisq
   
 }

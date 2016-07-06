@@ -46,12 +46,12 @@ void readAndProcessData(par * p, data * d)
           if(fi>0)
             for (j=0;j<=p->endSpectrum;j++)
               for (k=0;k<S32K;k++)
-                d->fittedSimHist[fi-1][j][k]+=p->simDataFixedAmpValue[i]*d->simHist[i][j][k];//add this data to the data that it is scaled relative to
+                d->fittedSimHist[fi-1][j][k]+=p->simDataFixedAmpValue[i][j]*d->simHist[i][j][k];//add this data to the data that it is scaled relative to
         }
       else if(p->simDataFixedAmp[i]==1)//data scaling is fixed to a specified value (will not be fitted)
         for (j=0;j<=p->endSpectrum;j++)
           for (k=0;k<S32K;k++)
-            d->fittedExpHist[j][k]-=p->simDataFixedAmpValue[i]*d->simHist[i][j][k];
+            d->fittedExpHist[j][k]-=p->simDataFixedAmpValue[i][j]*d->simHist[i][j][k];
     }
     
   if(p->verbose>=0) printf("Spectra read in...\n");
