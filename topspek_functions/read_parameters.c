@@ -199,14 +199,14 @@ void readParFile(const char * fileName, par * p)
     				}		
         	if(opt[i]->numPar==3)//scaling is the same for each spectrum
         		{
-        			for(j=0;j<p->numSpectra;j++)
+        			for(j=0;j<=p->endSpectrum;j++)
         				p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[2]);
         		}
         	else if(opt[i]->numPar>3)//scaling is different for each spectrum
         		{
         			for(j=0;j<p->numSpectra;j++)
         				if(j+2<MAX_OPT_PAR)
-        					p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[j+2]);
+        					p->simDataFixedAmpValue[p->numSimData][p->spectrum[j]]=atof(opt[i]->par[j+2]);
         			p->simDataCommonScaling[p->numSimData]=0;
         		}
         	p->numSimData++;

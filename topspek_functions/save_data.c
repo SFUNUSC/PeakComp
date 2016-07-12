@@ -22,7 +22,7 @@ void saveSpectra(const par * p, const fitdata * fd)
     printf("Saving scaled simulation data to output file(s)...\n");
 
   //save arrays to .mca files  
-  if(p->addBackground>=1)
+  if(abs(p->addBackground)>=1)
     {
       if((output=fopen("fit_background.mca","w"))==NULL)
         {
