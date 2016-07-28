@@ -1,4 +1,4 @@
-### **TopSpek** - A peak comparison and spectral decomposition tool)
+# **TopSpek** - A peak comparison and spectral decomposition tool)
 
 Maintainer: Jonathan Williams
 

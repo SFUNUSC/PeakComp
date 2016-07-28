@@ -188,15 +188,15 @@ void readParFile(const char * fileName, par * p)
 					
 					//set up scaling
     			if((strcmp(opt[i]->par[1],"rel_scaling")==0)||(strcmp(opt[i]->par[1],"rel")==0))
-    				p->simDataFixedAmp[p->numSimData]=2;
+    				memset(p->simDataFixedAmp[p->numSimData],2,NSPECT*sizeof(int));
     			else if((strcmp(opt[i]->par[1],"abs_scaling")==0)||(strcmp(opt[i]->par[1],"abs")==0))
-    				p->simDataFixedAmp[p->numSimData]=1;
+    				memset(p->simDataFixedAmp[p->numSimData],1,NSPECT*sizeof(int));
     			else
     				{
-							p->simDataFixedAmp[p->numSimData]=0;
-							strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
-							p->numFittedSimData++;
-    				}		
+					memset(p->simDataFixedAmp[p->numSimData],0,NSPECT*sizeof(int));
+					strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
+					p->numFittedSimData++;
+    				}
         	if(opt[i]->numPar==3)//scaling is the same for each spectrum
         		{
         			for(j=0;j<=p->endSpectrum;j++)
@@ -252,9 +252,9 @@ void readParFile(const char * fileName, par * p)
       for(i=0;i<p->numSimData;i++)
         {
           printf("Taking simulated data from file (%i of %i): %s\n",i+1,p->numSimData,p->simDataName[i]);
-          if(p->simDataFixedAmp[i]==1)
+          if(p->simDataFixedAmp[i][0]==1)
             printf("Fixing scaling factor for this data to %lf\n",p->simDataFixedAmpValue[i][0]);
-          if(p->simDataFixedAmp[i]==2)
+          if(p->simDataFixedAmp[i][0]==2)
           	{
 		        	if(p->simDataCommonScaling[i]==1)
 		          	printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",p->simDataFixedAmpValue[i][0]);

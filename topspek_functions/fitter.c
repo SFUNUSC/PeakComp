@@ -154,35 +154,36 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
   		for (i=0;i<p->numSpectra;i++)
   			for (j=0;j<p->numFittedSimData;j++)
   				if(fittedScaleFactor[j][i]<0.)
-  					fittedScaleFactor[j][i]=0;
-  	}	
+  					fittedScaleFactor[j][i]=0; //can result in odd behaviour with more than 2 datasets, should instead refit without the dataset
+  	}
     
   //generate scaling factors for all spectra, including those that weren't fitted
   int fd=0;//counter for number of datasets which have fit (not fixed amplitude)
   int ld=-1;//index of the last dataset for which a scaling factor was determined
   for (i=0;i<p->numSimData;i++)
     {
-      if(p->simDataFixedAmp[i]==0)//data was fit
+      if(p->simDataFixedAmp[i][0]==0)//data was fit
         {
           for (j=0;j<p->numSpectra;j++)
             fp->scaleFactor[i][j]=fittedScaleFactor[fd][j];
           fd++;
           ld=i;
         }
-      else if(p->simDataFixedAmp[i]==2)//data is scaled relative to the previous fit data
+      else if(p->simDataFixedAmp[i][0]==1)//data wasn't fit (fixed amplitude)
+        {
+          for (j=0;j<p->numSpectra;j++)
+            fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i][p->spectrum[j]];
+          ld=i;
+        }
+			else if(p->simDataFixedAmp[i][0]==2)//data is scaled relative to the previous fit data
         {
           if(ld>=0)//has a previous dataset been fit?
             for (j=0;j<p->numSpectra;j++)
               fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i][p->spectrum[j]]*fp->scaleFactor[ld][j];
           ld=i;
         }
-      else//data wasn't fit
-        {
-          for (j=0;j<p->numSpectra;j++)
-            fp->scaleFactor[i][j]=p->simDataFixedAmpValue[i][p->spectrum[j]];
-          ld=i;
-        }
     }
+
   //check for fixed background and generate background parameters if needed
   for (i=0;i<p->numSimData;i++)
     if(p->fixBG[i]==1)
@@ -200,7 +201,13 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
   
   free(fittedScaleFactor);
   
-  //print fit data
+}
+
+//functions prints parameter values from fit
+void printFitData(const par * p, const fitpar * fp)
+{
+	int i,j;
+	
   if(p->verbose>=0)
     {
       printf("FIT DATA\n--------\n");
@@ -230,7 +237,6 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
           printf("\n");
         }
     }
-
 }
 
 void applyBackgroundandScaling(const par * p, const fitpar * fp, const data * d, fitdata * fd)

@@ -1,9 +1,14 @@
+#executables and compiler stuff
 peak_comp
 topspek
+*.o
+#files generated when testing program
 list
 *tmpdatafile*
-*.o
+#data file types
 *.mca
 *.spe
 *.root
+#temporary files from text editors
+*.save
 *~

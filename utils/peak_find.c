@@ -1,7 +1,7 @@
 #include "peak_find.h"
 
 //function to find a peak, given an approximate value for its centroid
-peak_fit_par findPeak(const peak_search_par * spar, const int * data, const int dataLength)
+peak_fit_par findPeak(const peak_search_par * spar, const double * data, const int dataLength)
 { 
   //set default return parameters
   peak_fit_par par;
