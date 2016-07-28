@@ -19,7 +19,7 @@
 typedef struct
 {
   int spectrum[NSPECT];//spectrum indices in the .mca file(s) to compare
-  int startCh[NSPECT],endCh[NSPECT],fixBG[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
+  int startCh[NSPECT],endCh[NSPECT],fixBG[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData[NSPECT];
   double fixedBGPar[NSPECT][3];
   int addBackground;//0=no,1=lin background,2=quadratic background
   int fitAddBackground[NSPECT];

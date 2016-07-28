@@ -29,35 +29,35 @@ void readAndProcessData(par * p, data * d)
               d->fittedExpHist[j][k]=d->expHist[j][k] - p->fixedBGPar[i][0] - p->fixedBGPar[i][1]*k - p->fixedBGPar[i][2]*k*k;
         }
     
-  int fi=0;//index for simulated data to be fitted
+  int fi[NSPECT];//index for simulated data to be fitted
+  memset(fi,0,sizeof(fi));
   for (i=0;i<p->numSimData;i++)
     {
-          
+    	for (j=0;j<=p->endSpectrum;j++)
       //determine whether simulated data is fitted and read into histograms for fitting as needed
-      if(p->simDataFixedAmp[i][0]==0)
+      if(p->simDataFixedAmp[i][j]==0)
         {
-          for (j=0;j<=p->endSpectrum;j++)
+          for (k=0;k<S32K;k++)
+            d->fittedSimHist[fi[j]][j][k]=d->simHist[i][j][k];
+          fi[j]++;
+        }
+      else if(p->simDataFixedAmp[i][j]==2)//data scaling is fixed relative to the previous fitted dataset
+        {
+          if(fi[j]>0)
             for (k=0;k<S32K;k++)
-              d->fittedSimHist[fi][j][k]=d->simHist[i][j][k];
-          fi++;
+              d->fittedSimHist[fi[j]-1][j][k]+=p->simDataFixedAmpValue[i][j]*d->simHist[i][j][k];//add this data to the data that it is scaled relative to
         }
-      else if(p->simDataFixedAmp[i][0]==2)//data scaling is fixed relative to the previous fitted dataset
-        {
-          if(fi>0)
-            for (j=0;j<=p->endSpectrum;j++)
-              for (k=0;k<S32K;k++)
-                d->fittedSimHist[fi-1][j][k]+=p->simDataFixedAmpValue[i][j]*d->simHist[i][j][k];//add this data to the data that it is scaled relative to
-        }
-      else if(p->simDataFixedAmp[i][0]==1)//data scaling is fixed to a specified value (will not be fitted)
+      else if(p->simDataFixedAmp[i][j]==1)//data scaling is fixed to a specified value (will not be fitted)
         for (j=0;j<=p->endSpectrum;j++)
           for (k=0;k<S32K;k++)
             d->fittedExpHist[j][k]-=p->simDataFixedAmpValue[i][j]*d->simHist[i][j][k];
     }
-	if(fi!=p->numFittedSimData)
-		{
-			printf("ERROR: not all fitted data was imported correctly!\n");
-			exit(-1);
-		}
+  for(j=0;j<p->numSpectra;j++)
+		if(fi[j]!=p->numFittedSimData[j])
+			{
+				printf("ERROR: not all fitted data was imported correctly!\n");
+				exit(-1);
+			}
     
   if(p->verbose>=0) printf("Spectra read in...\n");
   

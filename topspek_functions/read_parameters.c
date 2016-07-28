@@ -42,7 +42,7 @@ void readParFile(const char * fileName, par * p)
   p->endSpectrum=0;
   p->maxNumCh=0;
   p->numSimData=0;
-  p->numFittedSimData=0;
+  memset(p->numFittedSimData,0,sizeof(p->numFittedSimData));
   p->channelScaling=1.;
   memset(p->fixBG,0,sizeof(p->fixBG));
   
@@ -194,8 +194,9 @@ void readParFile(const char * fileName, par * p)
     			else
     				{
 					memset(p->simDataFixedAmp[p->numSimData],0,NSPECT*sizeof(int));
-					strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
-					p->numFittedSimData++;
+					strcpy(p->fittedSimDataName[p->numFittedSimData[0]],p->simDataName[p->numSimData]);
+						for(j=0;j<p->numSpectra;j++)
+							p->numFittedSimData[j]++;
     				}
         	if(opt[i]->numPar==3)//scaling is the same for each spectrum
         		{
