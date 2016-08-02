@@ -31,7 +31,7 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData[i];j++)
                 fittedScaleFactor[j][i]=linEq.solution[j];
             }
-          else if(p->fitAddBackground[0]==1)
+          else if(abs(p->fitAddBackground[0])==1)
             {
               fp->bgA[i]=linEq.solution[0];
               fp->bgB[i]=0.;
@@ -55,27 +55,6 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
               for (j=0;j<p->numFittedSimData[i];j++)
                 fittedScaleFactor[j][i]=linEq.solution[j+3];
             }
-          else if(p->fitAddBackground[0]==-1)//constant positive background
-            {
-            	if(linEq.solution[0]<0.0)
-            		{
-            			//refit with no background
-          				solveFitEq(p,d,fs,0,0,&linEq);
-          				fp->bgA[i]=0.;
-				          fp->bgB[i]=0.;
-				          fp->bgC[i]=0.;
-				          for (j=0;j<p->numFittedSimData[i];j++)
-				            fittedScaleFactor[j][i]=linEq.solution[j];
-            		}
-            	else
-            		{
-				          fp->bgA[i]=linEq.solution[0];
-				          fp->bgB[i]=0.;
-				          fp->bgC[i]=0.;
-				          for (j=0;j<p->numFittedSimData[i];j++)
-				            fittedScaleFactor[j][i]=linEq.solution[j+1];
-                }
-            }
         }
     }
   else
@@ -96,55 +75,34 @@ void computeBackgroundandScaling(const par * p, const data * d, fitpar * fp)
             	  	for (j=0;j<p->numFittedSimData[i];j++)
               	  	fittedScaleFactor[j][i]=linEq.solution[j];
 		            }
-		          else if(p->fitAddBackground[i]==1)//constant background
+		          else if(abs(p->fitAddBackground[i])==1)//constant background
 		            {
     		          fp->bgA[i]=linEq.solution[0];
         		      fp->bgB[i]=0.;
             		  fp->bgC[i]=0.;
-              for (j=0;j<p->numFittedSimData[i];j++)
-                fittedScaleFactor[j][i]=linEq.solution[j+1];
-            }
-          else if(p->fitAddBackground[i]==2)//linear background
-            {
-              fp->bgA[i]=linEq.solution[0];
-              fp->bgB[i]=linEq.solution[1];
-              fp->bgC[i]=0.;
-              for (j=0;j<p->numFittedSimData[i];j++)
-                fittedScaleFactor[j][i]=linEq.solution[j+2];
-            }
-          else if(p->fitAddBackground[i]==3)//quadratic background
-            {
-              fp->bgA[i]=linEq.solution[0];
-              fp->bgB[i]=linEq.solution[1];
-              fp->bgC[i]=linEq.solution[2];
-              for (j=0;j<p->numFittedSimData[i];j++)
-                fittedScaleFactor[j][i]=linEq.solution[j+3];
-            }
-          else if(p->fitAddBackground[i]==-1)//constant positive background
-            {
-            	if(linEq.solution[0]<0.0)
-            		{
-            			//refit with no background
-          				solveFitEq(p,d,fs,i,0,&linEq);//solve for the spectrum
-          				fp->bgA[i]=0.;
-				          fp->bgB[i]=0.;
+				          for (j=0;j<p->numFittedSimData[i];j++)
+				            fittedScaleFactor[j][i]=linEq.solution[j+1];
+				        }
+				      else if(p->fitAddBackground[i]==2)//linear background
+				        {
+				          fp->bgA[i]=linEq.solution[0];
+				          fp->bgB[i]=linEq.solution[1];
 				          fp->bgC[i]=0.;
 				          for (j=0;j<p->numFittedSimData[i];j++)
-				            fittedScaleFactor[j][i]=linEq.solution[j];
-            		}
-									else
-										{
-						    		  fp->bgA[i]=linEq.solution[0];
-								      fp->bgB[i]=0.;
-								      fp->bgC[i]=0.;
-								      for (j=0;j<p->numFittedSimData[i];j++)
-								        fittedScaleFactor[j][i]=linEq.solution[j+1];
-		            		}
-            		}
-        		}
-      		else if(p->verbose>=0)
-    				printf("Spectrum %i: All scaling parameters are fixed, no chisq minimzation was performed.\n",i);
-    	}
+				            fittedScaleFactor[j][i]=linEq.solution[j+2];
+				        }
+				      else if(p->fitAddBackground[i]==3)//quadratic background
+				        {
+				          fp->bgA[i]=linEq.solution[0];
+				          fp->bgB[i]=linEq.solution[1];
+				          fp->bgC[i]=linEq.solution[2];
+				          for (j=0;j<p->numFittedSimData[i];j++)
+				            fittedScaleFactor[j][i]=linEq.solution[j+3];
+				        }
+		    		}
+				  		else if(p->verbose>=0)
+								printf("Spectrum %i: All scaling parameters are fixed, no chisq minimzation was performed.\n",i);
+				}
   }
   
   free(fs);
@@ -204,7 +162,20 @@ int checkForRefit(par * p, fitpar * fp)
 {
 	int refit=0;
 	int i,j,k;
-	if(p->forcePositiveS==1)//force positive scaling factors
+	if(p->fitAddBackground[0]==-1)//force positive constant background
+		{
+			for (i=0;i<p->numSimData;i++)
+				if(p->fixBG[i]==0)//make sure background isn't fixed
+					if(fp->bgA[i]<0.)
+						{
+							p->fixBG[i]=0;//fix the background
+							p->fixedBGPar[i][0]=0;//fix it to 0
+							p->fixedBGPar[i][1]=0;
+							p->fixedBGPar[i][2]=0;
+							refit=1;
+						}
+		}
+	else if(p->forcePositiveS==1)//force positive scaling factors
   	{
   		for (i=0;i<p->numSimData;i++)
   			for (j=0;j<p->numSpectra;j++)
