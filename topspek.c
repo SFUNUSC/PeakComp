@@ -49,11 +49,16 @@ void fitFromParameters(par * p, fitpar * fp, data * d, fitdata * fd)
 
   computeBackgroundandScaling(p,d,fp);//get background coefficients and scaling factors (see fitter.c)
   
-  if(fp->refitFlag==0)
-  	{ 
-  		printFitData(p,fp);//print fit parameters (see fitter.c)
-  		applyBackgroundandScaling(p,fp,d,fd);//apply fit parameters to data (see fitter.c)
+  int i=0;
+  while((checkForRefit(p,fp)==1)&&(i<5))
+  	{
+  		readAndProcessData(p,d);
+  		computeBackgroundandScaling(p,d,fp);//refit
+  		i++;
   	}
+
+	printFitData(p,fp);//print fit parameters (see fitter.c)
+  applyBackgroundandScaling(p,fp,d,fd);//apply fit parameters to data (see fitter.c)
 
   compareSpectra(p,d,fd);//generate chisq stats (see chisq.c)
   
