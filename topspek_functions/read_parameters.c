@@ -42,7 +42,7 @@ void readParFile(const char * fileName, par * p)
   p->endSpectrum=0;
   p->maxNumCh=0;
   p->numSimData=0;
-  p->numFittedSimData=0;
+  memset(p->numFittedSimData,0,sizeof(p->numFittedSimData));
   p->channelScaling=1.;
   memset(p->fixBG,0,sizeof(p->fixBG));
   
@@ -188,25 +188,33 @@ void readParFile(const char * fileName, par * p)
 					
 					//set up scaling
     			if((strcmp(opt[i]->par[1],"rel_scaling")==0)||(strcmp(opt[i]->par[1],"rel")==0))
-    				p->simDataFixedAmp[p->numSimData]=2;
+    				{
+    					for(j=0;j<p->numSpectra;j++)
+    						p->simDataFixedAmp[p->numSimData][j]=2;
+    				}
     			else if((strcmp(opt[i]->par[1],"abs_scaling")==0)||(strcmp(opt[i]->par[1],"abs")==0))
-    				p->simDataFixedAmp[p->numSimData]=1;
+    				{
+    					for(j=0;j<p->numSpectra;j++)
+    						p->simDataFixedAmp[p->numSimData][j]=1;
+    				}
     			else
     				{
-							p->simDataFixedAmp[p->numSimData]=0;
-							strcpy(p->fittedSimDataName[p->numFittedSimData],p->simDataName[p->numSimData]);
-							p->numFittedSimData++;
-    				}		
+							for(j=0;j<p->numSpectra;j++)
+    						p->simDataFixedAmp[p->numSimData][j]=0;
+							strcpy(p->fittedSimDataName[p->numFittedSimData[0]],p->simDataName[p->numSimData]);
+							for(j=0;j<p->numSpectra;j++)
+								p->numFittedSimData[j]++;
+    				}
         	if(opt[i]->numPar==3)//scaling is the same for each spectrum
         		{
-        			for(j=0;j<=p->endSpectrum;j++)
+        			for(j=0;j<p->numSpectra;j++)
         				p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[2]);
         		}
         	else if(opt[i]->numPar>3)//scaling is different for each spectrum
         		{
         			for(j=0;j<p->numSpectra;j++)
         				if(j+2<MAX_OPT_PAR)
-        					p->simDataFixedAmpValue[p->numSimData][p->spectrum[j]]=atof(opt[i]->par[j+2]);
+        					p->simDataFixedAmpValue[p->numSimData][j]=atof(opt[i]->par[j+2]);
         			p->simDataCommonScaling[p->numSimData]=0;
         		}
         	p->numSimData++;
@@ -252,9 +260,9 @@ void readParFile(const char * fileName, par * p)
       for(i=0;i<p->numSimData;i++)
         {
           printf("Taking simulated data from file (%i of %i): %s\n",i+1,p->numSimData,p->simDataName[i]);
-          if(p->simDataFixedAmp[i]==1)
+          if(p->simDataFixedAmp[i][0]==1)
             printf("Fixing scaling factor for this data to %lf\n",p->simDataFixedAmpValue[i][0]);
-          if(p->simDataFixedAmp[i]==2)
+          if(p->simDataFixedAmp[i][0]==2)
           	{
 		        	if(p->simDataCommonScaling[i]==1)
 		          	printf("Fixing scaling factor for this data to a factor of %lf relative to the last fitted data.\n",p->simDataFixedAmpValue[i][0]);

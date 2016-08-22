@@ -1,20 +1,26 @@
 //function reads an .mca file into an integer array and returns the array
-void readMCA(FILE * inp, const char * filename, const int numSpec, int outHist[NSPECT][S32K])
+void readMCA(FILE * inp, const char * filename, const int numSpec, double outHist[NSPECT][S32K])
 {
-  int i;
+	int i,j;
+	int tmpHist[S32K];
 
-  for (i=0;i<numSpec;i++)
-    if(fread(outHist[i],S32K*sizeof(int),1,inp)!=1)
-      {
-        printf("ERROR: Cannot read spectrum %i from the .mca file: %s\n",i,filename);
-        printf("Verify that the format and number of spectra in the file are correct.\n");
-        exit(-1);
-      }
+	for (i=0;i<numSpec;i++)
+		{
+			if(fread(tmpHist,S32K*sizeof(int),1,inp)!=1)
+				{
+					printf("ERROR: Cannot read spectrum %i from the .mca file: %s\n",i,filename);
+					printf("Verify that the format and number of spectra in the file are correct.\n");
+					exit(-1);
+				}
+			else
+				for(j=0;j<S32K;j++)
+					outHist[i][j]=(double)tmpHist[j];
+		}
   
 }
 
 //function reads an .spe file into an integer array and returns the array
-void readSPE(FILE * inp, const char * filename, const int numSpec, int outHist[NSPECT][S32K])
+void readSPE(FILE * inp, const char * filename, const int numSpec, double outHist[NSPECT][S32K])
 {
 	int i;
   char header[36];
@@ -34,17 +40,17 @@ void readSPE(FILE * inp, const char * filename, const int numSpec, int outHist[N
       exit(-1);
     }
   
-  //convert input data to integer
+  //convert input data to double
   for(i=0;i<S32K;i++)
-  	outHist[0][i]=(int)inpHist[i];
+  	outHist[0][i]=(double)inpHist[i];
   
   //copy data to each spectrum
   for(i=1;i<numSpec;i++)
-  	memcpy(outHist[i],outHist[0],S32K*sizeof(int));
+  	memcpy(outHist[i],outHist[0],S32K*sizeof(double));
   
 }
 
-void readDataFile(const char * filename, const int numSpec, int outHist[NSPECT][S32K])
+void readDataFile(const char * filename, const int numSpec, double outHist[NSPECT][S32K])
 {
 	FILE *inp;
 	if((inp=fopen(filename,"r"))==NULL)

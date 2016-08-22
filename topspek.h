@@ -19,7 +19,7 @@
 typedef struct
 {
   int spectrum[NSPECT];//spectrum indices in the .mca file(s) to compare
-  int startCh[NSPECT],endCh[NSPECT],fixBG[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData;
+  int startCh[NSPECT],endCh[NSPECT],fixBG[NSPECT],numSpectra,endSpectrum,maxNumCh,numSimData,numFittedSimData[NSPECT];
   double fixedBGPar[NSPECT][3];
   int addBackground;//0=no,1=lin background,2=quadratic background
   int fitAddBackground[NSPECT];
@@ -30,7 +30,7 @@ typedef struct
   int commonScaling;//0=disabled,1=all spectra will have the same scaling
   int verbose;//0=normal,-1=only output chisq value, no plots or other stats
   char expDataName[256],simDataName[NSIMDATA][256],fittedSimDataName[NSIMDATA][256];//filenames for the simulated and experiment data
-  int simDataFixedAmp[NSIMDATA];//bool specifying whether amplitude of each set of simulated data is fixed,1=fixed scaline,2=relative scaling
+  int simDataFixedAmp[NSIMDATA][NSPECT];//bool specifying whether amplitude of each spectrum is fixed,1=fixed scaling,2=relative scaling
   double simDataFixedAmpValue[NSIMDATA][NSPECT];//value at which amplitude is fixed for each set of simulated data and each spectrum
   int simDataCommonScaling[NSIMDATA];//bool specifying whether scaling is common to each spectrum
   double channelScaling;//value to scale all channel values specified in the parameter file by (useful for looking at the same data with different contraction factors)
@@ -40,23 +40,24 @@ typedef struct
 
 typedef struct
 {
-  double scaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
-  long double bgA[NSPECT],bgB[NSPECT],bgC[NSPECT];//background parameters (y = A + B*x + C*x*x)
+	double scaleFactor[NSIMDATA][NSPECT];//factor to scale a given simulated sprectrum by
+	long double bgA[NSPECT],bgB[NSPECT],bgC[NSPECT];//background parameters (y = A + B*x + C*x*x)
+	int refitFlag;//if 1, data should be refit
 }fitpar; //fit parameters
 
 typedef struct
 {
-  long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],
-              mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,
-              iii_sum,iiii_sum,sum1; //sums needed to construct system of equations
+	long double m_sum,s_sum[NSIMDATA],ss_sum[NSIMDATA][NSIMDATA],ms_sum[NSIMDATA],
+	mi_sum,mii_sum,si_sum[NSIMDATA],sii_sum[NSIMDATA],i_sum,ii_sum,
+	iii_sum,iiii_sum,sum1; //sums needed to construct system of equations
 }fitsum; //sums used in the fitting routine
 
 typedef struct
 {
-  int expHist[NSPECT][S32K];
-  int fittedExpHist[NSPECT][S32K];
-  int simHist[NSIMDATA][NSPECT][S32K];
-  int fittedSimHist[NSIMDATA][NSPECT][S32K];
+  double expHist[NSPECT][S32K];
+  double fittedExpHist[NSPECT][S32K];
+  double simHist[NSIMDATA][NSPECT][S32K];
+  double fittedSimHist[NSIMDATA][NSPECT][S32K];
 }data;
 
 typedef struct
