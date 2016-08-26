@@ -175,27 +175,28 @@ int checkForRefit(par * p, fitpar * fp)
 							refit=1;
 						}
 		}
-	else if(p->forcePositiveS==1)//force positive scaling factors
+	if(p->forcePositiveS==1)//force positive scaling factors
   	{
-  		for (i=0;i<p->numSimData;i++)
-  			for (j=0;j<p->numSpectra;j++)
-  				if(p->simDataFixedAmp[i][j]==0)//if data was fit
-  					if(fp->scaleFactor[i][j]<0.)
-  						{
-  							//printf("fp->scaleFactor[%i][%i] = %f\n",i,j,fp->scaleFactor[i][j]);
-  							p->simDataFixedAmp[i][j]=1;//fix scaling
-  							p->simDataFixedAmpValue[i][j]=0.;//fix to 0
-  							//deal with data scaled relative to this data
-  							k=i+1;
-  							while(p->simDataFixedAmp[k][j]==2)
-  								{
-  									p->simDataFixedAmp[k][j]=1;//fix scaling
-  									p->simDataFixedAmpValue[k][j]=0.;//fix to 0
-  									k++;
-  								}
-  							p->numFittedSimData[j]-=1;
-  							refit=1;
-  						}
+  		if(refit==0)//check that refit hasn't previously been called (only refit one thing at a time)
+				for (i=0;i<p->numSimData;i++)
+					for (j=0;j<p->numSpectra;j++)
+						if(p->simDataFixedAmp[i][j]==0)//if data was fit
+							if(fp->scaleFactor[i][j]<0.)
+								{
+									//printf("fp->scaleFactor[%i][%i] = %f\n",i,j,fp->scaleFactor[i][j]);
+									p->simDataFixedAmp[i][j]=1;//fix scaling
+									p->simDataFixedAmpValue[i][j]=0.;//fix to 0
+									//deal with data scaled relative to this data
+									k=i+1;
+									while(p->simDataFixedAmp[k][j]==2)
+										{
+											p->simDataFixedAmp[k][j]=1;//fix scaling
+											p->simDataFixedAmpValue[k][j]=0.;//fix to 0
+											k++;
+										}
+									p->numFittedSimData[j]-=1;
+									refit=1;
+								}
   	}
   if((p->verbose>=0)&&(refit==1))
   	printf("Some fit values were out of specified bounds.  Refitting...\n\n");
