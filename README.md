@@ -35,12 +35,12 @@ Use 'make' to compile.  Optional data plotting requires gnuplot to be installed.
 
 To run the program from anywhere, move the resulting 'topspek' executable to any directory under your $PATH environment variable.
 
-Tested using gcc and GNU make on Ubuntu 14.04, Scientific Linux/CentOS 6, and Arch Linux (as of July 2016).  Should work on more or less any Linux distro.
+Tested using gcc and GNU make on Ubuntu 14.04, Scientific Linux/CentOS 6, and Arch Linux (as of July 2016).  The code is self-contained and should work on more or less any Linux distro.
 
 
 ## How to Run
 
-The program runs from the command line, with only one argument: the path to a parameter file which sprecifies which files are to be fit and the parameters of the fit.
+The program runs from the command line, with only one argument: the path to a parameter file which specifies which files are to be fit and the parameters of the fit.
 
 A sample parameter file is provided ('sample_parameters').
 
